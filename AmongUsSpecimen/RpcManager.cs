@@ -9,7 +9,7 @@ using BepInEx.Logging;
 using HarmonyLib;
 using Hazel;
 
-namespace AmongUsSpecimen.Rpc;
+namespace AmongUsSpecimen;
 
 public static class RpcManager
 {
