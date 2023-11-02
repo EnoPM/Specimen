@@ -1,5 +1,4 @@
-﻿using AmongUsSpecimen.Rpc;
-using HarmonyLib;
+﻿using HarmonyLib;
 using Hazel;
 
 namespace AmongUsSpecimen.Patches;
