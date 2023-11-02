@@ -38,4 +38,16 @@ public class Specimen : BasePlugin
     {
         UpdateRequests.Add(config);
     }
+
+    [Rpc]
+    internal static void TestRpc(PlayerControl __sender, string message, List<int> testList)
+    {
+        System.Console.WriteLine($"{__sender.Data.PlayerName} send {message} with a list of {testList.Count} elements");
+    }
+
+
+    internal static void SendTestRpc()
+    {
+        TestRpc(PlayerControl.LocalPlayer, "Hello", new List<int> { 1, 2, 3, 4, 5 });
+    }
 }

@@ -11,7 +11,7 @@ internal static class PlayerControlPatches
     private static bool HandleRpcPrefix(PlayerControl __instance, byte callId, MessageReader reader)
     {
         if (callId != RpcManager.ReservedRpcCallId) return true;
-        
+        RpcManager.HandleRpc(__instance, reader);
         return false;
     }
 }
