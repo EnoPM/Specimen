@@ -1,15 +1,21 @@
 ﻿using System.Collections.Generic;
+using AmongUsSpecimen.Attributes;
 using AmongUsSpecimen.UI;
 using AmongUsSpecimen.Updater;
 using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
+using UnityEngine;
+using UniverseLib;
 
 namespace AmongUsSpecimen;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 [BepInPlugin(Guid, Name, Version)]
 [BepInProcess("Among Us")]
+[ModUpdater("EnoPM", "Specimen", Version, "AmongUsSpecimen.dll", "Specimen")]
+[ModUpdater("EnoPM", "UniverseLib", Universe.VERSION, "UniverseLib.IL2CPP.dll", "Specimen")]
 public class Specimen : BasePlugin
 {
     public const string Guid = "specimen.eno.pm";
@@ -22,16 +28,26 @@ public class Specimen : BasePlugin
     internal static readonly List<UpdateModConfig> UpdateRequests = new();
     internal UpdaterBehaviour UpdaterBehaviour;
     
+    public ConfigEntry<KeyCode> ToggleUpdater { get; private set; }
+    
     public override void Load()
     {
         Instance = this;
         
         // Plugin startup logic
+        ToggleUpdater = Config.Bind("Updater", "Toggle Updaters", KeyCode.F2);
+        
         Harmony.PatchAll();
         UiManager.Init();
         UpdaterBehaviour = AddComponent<UpdaterBehaviour>();
         
         Log.LogInfo($"Plugin {Name} is loaded!");
+    }
+
+    public static bool DefaultCompatibilityCheck(UpdateModConfig config, GithubRelease release)
+    {
+        var isVersionCompatible = release.Version.Major == config.VersionToCompare.Major && release.Version.Minor == config.VersionToCompare.Minor;
+        return isVersionCompatible || !release.Description.Contains(Application.version);
     }
 
     public static void RegisterModUpdater(UpdateModConfig config)

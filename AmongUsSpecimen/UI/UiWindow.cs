@@ -23,7 +23,7 @@ public abstract class UiWindow : PanelBase
     protected virtual Vector4 Paddings => Vector4.zero;
     protected virtual int Spacing => 0;
     public virtual bool DisableClickThroughWindow => true;
-    private WindowHeader Header { get; set; }
+    protected WindowHeader Header { get; set; }
     
     public float InnerWidth => MinWidth - Paddings.y - Paddings.w;
     public float InnerHeight => MinHeight - Paddings.x - Paddings.z;
@@ -110,16 +110,17 @@ public abstract class UiWindow : PanelBase
     
     public override void SetActive(bool active)
     {
+        SetActive(active, true);
+    }
+    
+    public void SetActive(bool active, bool updateOverlay)
+    {
         base.SetActive(active);
-        PassiveButtonManagerPatches.UpdateState();
-        if (HasOverlay)
+        if (HasOverlay && updateOverlay)
         {
-            if (active)
-            {
-                Owner.SetOnTop();
-            }
             UiManager.UpdateOverlayState();
         }
+        PassiveButtonManagerPatches.UpdateState();
     }
     
     protected enum Positions

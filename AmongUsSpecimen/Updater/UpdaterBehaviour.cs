@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using AmongUsSpecimen.UI;
 using BepInEx.Unity.IL2CPP.Utils;
 using UnityEngine;
@@ -10,7 +9,15 @@ internal class UpdaterBehaviour : MonoBehaviour
 {
     private void Update()
     {
-        if (!UiManager.IsReady || Specimen.UpdateRequests.Count == 0) return;
+        if(!UiManager.IsReady) return;
+        if (Input.GetKeyDown(Specimen.Instance.ToggleUpdater.Value))
+        {
+            foreach (var autoUpdatedMod in AutoUpdatedMod.AutoUpdatedMods)
+            {
+                autoUpdatedMod.ToggleWindow();
+            }
+        }
+        if (Specimen.UpdateRequests.Count == 0) return;
         var cache = new List<UpdateModConfig>(Specimen.UpdateRequests);
         foreach (var config in cache)
         {

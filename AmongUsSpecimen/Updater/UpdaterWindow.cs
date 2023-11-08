@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using AmongUsSpecimen.UI;
 using AmongUsSpecimen.UI.Extensions;
@@ -20,16 +19,24 @@ public class UpdaterWindow : UiWindow
     {
         UpdatedMod = update;
         _selectedRelease = UpdatedMod.LatestRelease;
+        
+        BuildWindow();
     }
 
     public override string Name => "Specimen Updater";
     public override bool HasOverlay => true;
-    protected override string Title => $"<color=#FCBA03>Better</color><color=#FF351F>OtherRoles</color> <b>Updater</b>";
+    protected override bool DisplayByDefault => true;
+    public override bool AlwaysOnTop => true;
+    protected override string Title => $"<b><color=#5925b3>Specimen</color> Updater:</b>";
     public override int MinWidth => 600;
     public override int MinHeight => 600;
     protected override Color BackgroundColor => UIPalette.Dark;
     protected override Positions Position => Positions.MiddleCenter;
-    
+    protected override void ConstructWindowContent()
+    {
+        
+    }
+
     private Text _categoryTitle = null!;
 
     private GameObject _titleContainer;
@@ -43,12 +50,14 @@ public class UpdaterWindow : UiWindow
     private readonly Dictionary<string, GithubRelease> _githubReleases = new();
     private GithubRelease _selectedRelease { get; set; }
     
-    protected override void ConstructWindowContent()
+    private void BuildWindow()
     {
         _titleContainer = UIFactory.CreateHorizontalGroup(ContentRoot, "TitleContainer", false, false, true, true,
             0, new Vector4(5f, 5f, 5f, 0f), UIPalette.Transparent);
         UIFactory.SetLayoutElement(_titleContainer, minHeight: 40, flexibleHeight: 0, minWidth: MinWidth,
             flexibleWidth: 0);
+        
+        Specimen.Instance.Log.LogMessage($"{nameof(ConstructWindowContent)}: 1");
         
         _categoryTitle = UIFactory.CreateLabel(_titleContainer, "Title", "Select a version to install:", TextAnchor.MiddleLeft,
             UIPalette.Secondary, true, 18);
@@ -56,44 +65,62 @@ public class UpdaterWindow : UiWindow
         UIFactory.SetLayoutElement(_categoryTitle.gameObject, minWidth: 260, flexibleWidth: 0, minHeight: 40,
             flexibleHeight: 0);
         
+        Specimen.Instance.Log.LogMessage($"{nameof(ConstructWindowContent)}: 2");
+        
         var releaseNameContainer = UIFactory.CreateHorizontalGroup(ContentRoot, "ReleaseNameContainer", false, false, true, true,
             0, new Vector4(5f, 5f, 5f, 0f), UIPalette.Transparent, TextAnchor.MiddleCenter);
-        UIFactory.SetLayoutElement(releaseNameContainer, minHeight: 60, flexibleHeight: 0, minWidth: MinWidth,
+        UIFactory.SetLayoutElement(releaseNameContainer, minHeight: 35, flexibleHeight: 0, minWidth: MinWidth,
             flexibleWidth: 0);
         _releaseName = UIFactory.CreateLabel(releaseNameContainer, "ReleaseTitle", string.Empty, TextAnchor.MiddleCenter, fontSize: 30);
-        UIFactory.SetLayoutElement(_releaseName.gameObject, MinWidth, flexibleWidth: 0, minHeight: 40, flexibleHeight: 0);
+        UIFactory.SetLayoutElement(_releaseName.gameObject, MinWidth, flexibleWidth: 0, minHeight: 35, flexibleHeight: 0);
+        
+        Specimen.Instance.Log.LogMessage($"{nameof(ConstructWindowContent)}: 3");
         
         var buttonsContainer = UIFactory.CreateVerticalGroup(ContentRoot, "ButtonsContainer", false, false, true, true,
             0, new Vector4(5f, 5f, 5f, 0f), UIPalette.Transparent, TextAnchor.MiddleCenter);
         UIFactory.SetLayoutElement(buttonsContainer, minHeight: 60, flexibleHeight: 0, minWidth: MinWidth,
             flexibleWidth: 0);
         _downloadButton = UIFactory.CreateButton(buttonsContainer, "DownloadButton", "Download & Install", UIPalette.Success);
-        UIFactory.SetLayoutElement(_downloadButton.GameObject, 300, flexibleWidth: 0, minHeight: 40, flexibleHeight: 0);
+        UIFactory.SetLayoutElement(_downloadButton.GameObject, 300, flexibleWidth: 0, minHeight: 30, flexibleHeight: 0);
         _downloadButton.Component.SetColorsAuto(UIPalette.Success);
         _downloadButton.ButtonText.fontSize = 18;
         _downloadButton.ButtonText.fontStyle = FontStyle.Bold;
         _downloadButton.OnClick = OnDownloadButtonClick;
+        
+        Specimen.Instance.Log.LogMessage($"{nameof(ConstructWindowContent)}: 4");
 
         _progressBar = new UI.Components.ProgressBar(buttonsContainer, MinWidth - 40, 30);
         _progressBar.SetActive(false);
+        
+        Specimen.Instance.Log.LogMessage($"{nameof(ConstructWindowContent)}: 5");
 
         _progressInfos = UIFactory.CreateLabel(buttonsContainer, "ProgressInfos", string.Empty, TextAnchor.MiddleCenter, UIPalette.Secondary);
-        UIFactory.SetLayoutElement(_progressInfos.gameObject, MinWidth, flexibleWidth: 0, minHeight: 20, flexibleHeight: 0);
+        UIFactory.SetLayoutElement(_progressInfos.gameObject, MinWidth, flexibleWidth: 0, minHeight: 40, flexibleHeight: 0);
         _progressInfos.gameObject.SetActive(false);
+        
+        Specimen.Instance.Log.LogMessage($"{nameof(ConstructWindowContent)}: 6");
         
         var scrollbarContainer = UIFactory.CreateVerticalGroup(ContentRoot, "ScrollbarContainer", false, false, true,
             true, 0, new Vector4(10f, 0f, 0f, 0f), UIPalette.Transparent);
         UIFactory.SetLayoutElement(scrollbarContainer, minHeight: 400, flexibleHeight: 0, minWidth: MinWidth,
             flexibleWidth: 0);
         
+        Specimen.Instance.Log.LogMessage($"{nameof(ConstructWindowContent)}: 7");
+        
         var scrollerObject = UIFactory.CreateScrollView(scrollbarContainer, "ReleaseScrollView", out var content, out _);
         UIFactory.SetLayoutElement(scrollerObject, MinWidth, 25, 0, 9999);
         UIFactory.SetLayoutElement(content, MinWidth, 25, 0, 9999);
         
+        Specimen.Instance.Log.LogMessage($"{nameof(ConstructWindowContent)}: 8");
+        
         _releaseDescription = UIFactory.CreateLabel(content, "ReleaseDescription", string.Empty, TextAnchor.UpperLeft, fontSize: 18);
         UIFactory.SetLayoutElement(_releaseDescription.gameObject, MinWidth, flexibleWidth: 0, minHeight: 40, flexibleHeight: 0);
         
-        RefreshDropdown();
+        Specimen.Instance.Log.LogMessage($"{nameof(ConstructWindowContent)}: 9");
+        
+        Header.SetText($"{Title} {UpdatedMod.Config.RepositoryOwner}/{UpdatedMod.Config.RepositoryName}");
+        
+        RefreshDropdown(UpdatedMod.LatestRelease);
     }
     
     public void SetProgressInfosText(string text)
@@ -110,9 +137,7 @@ public class UpdaterWindow : UiWindow
 
     private void OnDownloadButtonClick()
     {
-        if (_selectedRelease == null) return;
-        var isCompatible = _selectedRelease.Version.Major == UpdatedMod.Config.VersionToCompare.Major && _selectedRelease.Version.Minor == UpdatedMod.Config.VersionToCompare.Minor;
-        if (!isCompatible) return;
+        if (_selectedRelease == null || !UpdatedMod.Config.CheckCompatibility(UpdatedMod.Config, _selectedRelease)) return;
         UiManager.Behaviour.StartCoroutine(UpdatedMod.CoDownloadRelease(_selectedRelease));
     }
 
@@ -124,7 +149,7 @@ public class UpdaterWindow : UiWindow
     private void RefreshSelectedRelease()
     {
         if (_selectedRelease == null) return;
-        var isCompatible = _selectedRelease.Version.Major == UpdatedMod.Config.VersionToCompare.Major && _selectedRelease.Version.Minor == UpdatedMod.Config.VersionToCompare.Minor;
+        var isCompatible = UpdatedMod.Config.CheckCompatibility(UpdatedMod.Config, _selectedRelease);
         var isUpgrade = _selectedRelease.IsNewer(UpdatedMod.Config.VersionToCompare);
         var isReinstall = !isUpgrade && _selectedRelease.Version == UpdatedMod.Config.VersionToCompare;
         var updateType = isUpgrade ? "Upgrade" : isReinstall ? "Reinstall" : "Downgrade";
@@ -170,7 +195,7 @@ public class UpdaterWindow : UiWindow
             foreach (var release in UpdatedMod.Releases)
             {
                 var isLatest = latestRelease?.Id == release.Id;
-                var isCompatible = release.Version.Major == UpdatedMod.Config.VersionToCompare.Major && release.Version.Minor == UpdatedMod.Config.VersionToCompare.Minor;
+                var isCompatible = UpdatedMod.Config.CheckCompatibility(UpdatedMod.Config, release);
                 var isCurrent = release.Version == UpdatedMod.Config.VersionToCompare;
                 var isNewer = release.IsNewer(UpdatedMod.Config.VersionToCompare);
                 var color = isCurrent ? UIPalette.Info : !isCompatible ? Color.red : isNewer ? Color.green : UIPalette.Warning;

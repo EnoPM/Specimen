@@ -2,9 +2,9 @@
 
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
-        <AssemblyName>AmongUsSpecimen</AssemblyName>
-        <Description>Among Us BepinEx plugin updater</Description>
-        <Version>0.0.1</Version>
+        <AssemblyName>SpecimenDemo</AssemblyName>
+        <Description>My first plugin</Description>
+        <Version>1.0.0</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>latest</LangVersion>
         <RestoreAdditionalProjectSources>
@@ -12,7 +12,7 @@
             https://nuget.bepinex.dev/v3/index.json;
             https://nuget.samboy.dev/v3/index.json
         </RestoreAdditionalProjectSources>
-        <RootNamespace>AmongUsSpecimen</RootNamespace>
+        <RootNamespace>SpecimenDemo</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -25,18 +25,15 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Reference Include="UniverseLib.IL2CPP">
-        <HintPath>libs\UniverseLib.IL2CPP.dll</HintPath>
-      </Reference>
+      <ProjectReference Include="..\AmongUsSpecimen\AmongUsSpecimen.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Reference Include="UniverseLib.IL2CPP">
+        <HintPath>..\AmongUsSpecimen\libs\UniverseLib.IL2CPP.dll</HintPath>
+      </Reference>
+    </ItemGroup>
     <Target Name="CopyPlugins" AfterTargets="AfterBuild">
-        <Copy SourceFiles="$(TargetPath)" DestinationFolder="C:\Program Files (x86)\Steam\steamapps\common\Among Us\BepInEx\plugins\Specimen" />
-    </Target>
-    <Target Name="CopyPluginsToBetterOtherRolesLibs" AfterTargets="AfterBuild">
-        <Copy SourceFiles="$(TargetPath)" DestinationFolder="C:\Users\Utilisateur\RiderProjects\BetterOtherRoles-v2\BetterOtherRoles\libs" />
-    </Target>
-    <Target Name="CopyPluginsToBetterOtherRolesGameFolder" AfterTargets="AfterBuild">
-        <Copy SourceFiles="$(TargetPath)" DestinationFolder="C:\Program Files (x86)\Steam\steamapps\common\Among Us - BetterOtherRoles2\BepInEx\plugins\Specimen" />
+        <Copy SourceFiles="$(TargetPath)" DestinationFolder="C:\Program Files (x86)\Steam\steamapps\common\Among Us\BepInEx\plugins" />
     </Target>
 </Project>

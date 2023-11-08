@@ -5,9 +5,10 @@ namespace AmongUsSpecimen.Updater;
 
 public class UpdateModConfig
 {
-    public readonly string Directory;
-    public readonly string RepositoryOwner;
-    public readonly string RepositoryName;
-    public readonly List<string> FilesToUpdate;
-    public readonly Version VersionToCompare;
+    public string Directory;
+    public string RepositoryOwner;
+    public string RepositoryName;
+    public readonly List<string> FilesToUpdate = new();
+    public Version VersionToCompare;
+    public Func<UpdateModConfig, GithubRelease, bool> CheckCompatibility = Specimen.DefaultCompatibilityCheck;
 }

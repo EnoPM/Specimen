@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AmongUsSpecimen.Utils;
+using AmongUsSpecimen.Utils.Converters;
 using BepInEx.Logging;
 using HarmonyLib;
 using Hazel;
@@ -24,29 +25,44 @@ public static class RpcManager
     private static void LogWarning(string message) => LogSource.LogWarning($"[{nameof(RpcManager)}] {message}");
     private static void LogError(string message) => LogSource.LogError($"[{nameof(RpcManager)}] {message}");
 
+    private static readonly JsonSerializerOptions SerializerOptions = new() { Converters = { new UnityColorConverter(), new PlayerControlConverter() }};
+
     internal static void Load()
     {
-        var methods = AttributeHelpers.GetMethodsByAttribute<RpcAttribute>(AssemblyHelpers.AllAssemblies);
-        LogMessage($"{methods.Count} methods to register");
+        foreach (var assembly in AssemblyHelpers.AllAssemblies)
+        {
+            LoadAssembly(assembly);
+        }
+    }
+
+    public static void LoadAssembly(Assembly assembly)
+    {
+        var methods = assembly.GetMethodsByAttribute<RpcAttribute>();
+        LogMessage($"{methods.Count} methods to register in assembly {assembly.FullName}");
         foreach (var method in methods)
         {
-            var id = $"{method.Method.DeclaringType?.FullName}#{method.Method.Name}";
-            if (AllRpc.TryGetValue(id, out var alreadyRegistered))
-            {
-                LogWarning(
-                    $"Rpc {id} already registered for method {alreadyRegistered.OriginalMethod.Name} in class {alreadyRegistered.OriginalMethod.DeclaringType?.FullName}");
-                continue;
-            }
-
-            var original = Harmony.Patch(method.Method);
-            var prefix = new HarmonyMethod(AccessTools.Method(typeof(Patches), nameof(Patches.DynamicPrefix)));
-            var declaringType = method.Method.DeclaringType;
-            LogDebug($"Trying to register rpc method of type {declaringType?.FullName}");
-            var invoker = new MethodInvoker(original, method.Method.IsStatic ? null : Singletons.Get(method.Declaring));
-            Harmony.Patch(method.Method, prefix);
-            AllRpc[id] = new RegisteredRpc(method.Method, method.Attribute, invoker);
-            LogDebug($"Registered rpc for method {id}");
+            RegisterMethodResult(method);
         }
+    }
+
+    private static void RegisterMethodResult(AttributeHelpers.AttributeMethodResult<RpcAttribute> methodResult)
+    {
+        var id = $"{methodResult.Method.DeclaringType?.FullName}#{methodResult.Method.Name}";
+        if (AllRpc.TryGetValue(id, out var alreadyRegistered))
+        {
+            LogWarning(
+                $"Rpc {id} already registered for method {alreadyRegistered.OriginalMethod.Name} in class {alreadyRegistered.OriginalMethod.DeclaringType?.FullName}");
+            return;
+        }
+
+        var original = Harmony.Patch(methodResult.Method);
+        var prefix = new HarmonyMethod(AccessTools.Method(typeof(Patches), nameof(Patches.DynamicPrefix)));
+        var declaringType = methodResult.Method.DeclaringType;
+        LogDebug($"Trying to register rpc method of type {declaringType?.FullName}");
+        var invoker = new MethodInvoker(original, methodResult.Method.IsStatic ? null : Singletons.Get(methodResult.Declaring));
+        Harmony.Patch(methodResult.Method, prefix);
+        AllRpc[id] = new RegisteredRpc(methodResult.Method, methodResult.Attribute, invoker);
+        LogDebug($"Registered rpc for method {id}");
     }
 
     private static class Patches
@@ -60,18 +76,23 @@ public static class RpcManager
 
             var parameters = rpc.OriginalMethod.GetParameters().ToList();
             var localParameterIndexes = new List<int> { parameters.FindIndex(IsSenderParameter) };
+            PlayerControl sender = null;
 
             for (var i = 0; i < __args.Length; i++)
             {
-                if (localParameterIndexes.Contains(i)) continue;
+                if (localParameterIndexes.Contains(i))
+                {
+                    sender = (PlayerControl)__args[i];
+                    continue;
+                }
                 data.Add(JsonSerializer.Serialize(__args[i]));
             }
 
             var id = $"{__originalMethod.DeclaringType?.FullName}#{__originalMethod.Name}";
 
-            new RpcData { Id = id, Data = data }.Send();
+            new RpcData { Id = id, Data = data }.Send(sender);
 
-            return rpc.Attribute.Execution != LocalExecution.None;
+            return rpc.Attribute.Execution == LocalExecution.Before && sender && sender != PlayerControl.LocalPlayer;
         }
     }
 
@@ -80,13 +101,13 @@ public static class RpcManager
         var data = RpcData.Read(reader);
         if (!AllRpc.TryGetValue(data.Id, out var rpc))
         {
-            LogWarning($"Unknown rpc: {data.Id}");
+            LogWarning($"HandleRpc: Unknown rpc: {data.Id}");
             return;
         }
 
         if (sender.AmOwner)
         {
-            LogWarning($"AmOwner of rpc call {data.Id}");
+            LogWarning($"HandleRpc: AmOwner of rpc call {data.Id}");
             if (rpc.Attribute.Execution != LocalExecution.After) return;
         }
         var parameters = rpc.OriginalMethod.GetParameters();
@@ -106,23 +127,36 @@ public static class RpcManager
             else
             {
                 index++;
-                var deserializerMethod = typeof(JsonSerializer).GetMethod(nameof(JsonSerializer.Deserialize));
-                var deserialized = deserializerMethod?.MakeGenericMethod(p.ParameterType)
-                    .Invoke(null, new object[] { data.Data[index] });
-                if (deserialized == null)
+                try
                 {
-                    LogError($"[RPC] Unable to deserialize data from rpc {data.Id}");
-                    args.Add(null);
+                    var deserializerMethod = typeof(JsonSerializer).GetMethods().FirstOrDefault(x => x.Name == nameof(JsonSerializer.Deserialize) && x.ContainsGenericParameters && x.GetParameters().Length == 2 && x.GetParameters()[0].ParameterType == typeof(string) && x.GetParameters()[1].ParameterType == typeof(JsonSerializerOptions));
+                    if (deserializerMethod == null)
+                    {
+                        LogError($"deserializerMethod not found");
+                        return;
+                    }
+                    var deserialized = deserializerMethod.MakeGenericMethod(p.ParameterType)
+                        .Invoke(null, new object[] { data.Data[index], SerializerOptions });
+                    if (deserialized == null)
+                    {
+                        LogError($"HandleRpc: Unable to deserialize data from rpc {data.Id}");
+                        args.Add(null);
+                        return;
+                    }
+                    args.Add(deserialized);
+                }
+                catch (Exception exception)
+                {
+                    LogError($"Unable to deserialize rpc data: {exception}");
                     return;
                 }
-                args.Add(deserialized);
             }
         }
 
         var declaringType = rpc.OriginalMethod.DeclaringType;
         if (declaringType == null)
         {
-            LogError($"Unable to execute rpc {data.Id}: no declaring type!");
+            LogError($"HandleRpc: Unable to execute rpc {data.Id}: no declaring type!");
             return;
         }
 
@@ -168,9 +202,10 @@ internal class RpcData
 
     [JsonPropertyName("data")] public List<string> Data { get; set; }
 
-    internal void Send()
+    internal void Send(PlayerControl sender = null)
     {
-        var writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId,
+        sender = sender ? sender : PlayerControl.LocalPlayer;
+        var writer = AmongUsClient.Instance.StartRpcImmediately(sender.NetId,
             RpcManager.ReservedRpcCallId, SendOption.Reliable);
         writer.Write(Serialize());
         AmongUsClient.Instance.FinishRpcImmediately(writer);

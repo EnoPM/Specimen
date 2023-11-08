@@ -14,13 +14,15 @@ public static class UiManager
 {
     private const float StartupDelay = 1f;
 
-    private static UIBase UIBase { get; set; }
+    internal static UIBase UIBase { get; set; }
     private static GameObject UiRoot => UIBase?.RootObject;
     internal static RectTransform UiRootRect { get; private set; }
     internal static Canvas UiCanvas { get; private set; }
     internal static readonly List<UiWindow> Windows = new();
     private static OverlayWindow _overlay;
     internal static UiBehaviour Behaviour;
+
+    public static event Action Inizialized;
     
     public static bool IsReady { get; private set; }
 
@@ -45,6 +47,7 @@ public static class UiManager
         IsReady = true;
         _overlay = RegisterWindow<OverlayWindow>();
         Behaviour = Specimen.Instance.AddComponent<UiBehaviour>();
+        Inizialized?.Invoke();
     }
 
     private static void HandleUiLog(string message, LogType logType)
@@ -67,7 +70,14 @@ public static class UiManager
 
     internal static void UpdateOverlayState()
     {
-        _overlay?.SetActive(Windows.Any(window => window.Enabled && window.HasOverlay));
+        var state = Windows.Any(window => window.Enabled && window.HasOverlay);
+        Specimen.Instance.Log.LogMessage($"SetOverlayState: {state}");
+        _overlay?.SetActive(state);
+        if (!state) return;
+        foreach (var window in Windows.Where(window => window.Enabled && window != _overlay))
+        {
+            window.SetActive(true, false);
+        }
     }
 
     internal static void EnsureWindowValidPositions()

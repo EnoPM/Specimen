@@ -6,13 +6,17 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using AmongUsSpecimen.UI;
+using AmongUsSpecimen.Utils;
+using BepInEx;
 using UnityEngine;
 using UnityEngine.Networking;
+using UniverseLib.UI;
 
 namespace AmongUsSpecimen.Updater;
 
 public class AutoUpdatedMod
 {
+    internal static readonly List<AutoUpdatedMod> AutoUpdatedMods = new();
     public bool HasUpdateAvailable => LatestRelease != null;
     
     public readonly UpdateModConfig Config;
@@ -23,6 +27,13 @@ public class AutoUpdatedMod
     public AutoUpdatedMod(UpdateModConfig config)
     {
         Config = config;
+        AutoUpdatedMods.Add(this);
+    }
+
+    public void ToggleWindow()
+    {
+        if (_window == null) return;
+        _window.SetActive(!_window.Enabled);
     }
 
     public IEnumerator CoStart()
@@ -30,10 +41,12 @@ public class AutoUpdatedMod
         Releases = null;
         yield return CoLoadReleases();
         if (Releases == null) yield break;
-        _window = UiManager.RegisterWindow<UpdaterWindow>(Config.VersionToCompare, Releases, LatestRelease);
+        _window = UiManager.RegisterWindow<UpdaterWindow>(this);
+        //_window = new UpdaterWindow(UiManager.UIBase, this);
+        _window.SetActive(true);
     }
 
-    public IEnumerator CoLoadReleases()
+    private IEnumerator CoLoadReleases()
     {
         var www = MakeWebRequest(
             UnityWebRequest.UnityWebRequestMethod.Get,
@@ -63,15 +76,18 @@ public class AutoUpdatedMod
     
     public IEnumerator CoDownloadRelease(GithubRelease release)
     {
+        Specimen.Instance.Log.LogMessage($"CoDownloadRelease: {release.Name}");
         foreach (var asset in release.Assets)
         {
             if (!IsUpdateAsset(asset)) continue;
+            Specimen.Instance.Log.LogMessage($"CoDownloadRelease asset: {asset.Name}");
             yield return CoDownloadAsset(asset);
         }
     }
     
     private IEnumerator CoDownloadAsset(GithubAsset asset)
     {
+        var dirPath = Path.Combine(Paths.PluginPath, Config.Directory);
         var www = MakeWebRequest(UnityWebRequest.UnityWebRequestMethod.Get, asset.DownloadUrl);
         var operation = www.SendWebRequest();
         
@@ -93,11 +109,20 @@ public class AutoUpdatedMod
 
         CopyAssetStart(asset);
         
-        var filePath = Path.Combine(Config.Directory, asset.Name);
+        var filePath = Path.Combine(dirPath, asset.Name);
         try
         {
-            if (File.Exists(filePath + ".old")) File.Delete(filePath + "old");
-            if (File.Exists(filePath)) File.Move(filePath, filePath + ".old");
+            if (!Directory.Exists(dirPath))
+            {
+                Directory.CreateDirectory(dirPath);
+            }
+            else
+            {
+                Specimen.Instance.Log.LogMessage($"Delete old asset: {filePath}.old");
+                if (File.Exists(filePath + ".old")) File.Delete(filePath + "old");
+                Specimen.Instance.Log.LogMessage($"Move current asset: {filePath}");
+                if (File.Exists(filePath)) File.Move(filePath, filePath + ".old");
+            }
         }
         catch (Exception exception)
         {
@@ -139,32 +164,41 @@ public class AutoUpdatedMod
 
     private void DownloadAssetStart(GithubAsset asset)
     {
+        _window.SetProgressBarActive(true);
+        _window.SetProgressInfosText($"Downloading {asset.Name}");
     }
     
     private void DownloadAssetProgress(GithubAsset asset, float progress)
     {
+        _window.SetDownloadProgression(progress);
     }
     
     private void DownloadAssetError(GithubAsset asset, string error)
     {
         Specimen.Instance.Log.LogError($"[AutoUpdateMod]DownloadAssetError {Config.RepositoryOwner}/{Config.RepositoryName}: {error}");
+        _window.SetProgressInfosText(ColorHelpers.Colorize(Color.red, $"Error in {asset.Name} download:\n {error}"));
     }
     
     private void DownloadAssetEnd(GithubAsset asset)
     {
+        _window.SetProgressInfosText($"{asset.Name} downloaded!");
+        _window.SetDownloadProgression(1f);
     }
     
     private void CopyAssetStart(GithubAsset asset)
     {
+        _window.SetProgressInfosText($"Updating {asset.Name}");
     }
     
     private void CopyAssetError(GithubAsset asset, string error)
     {
         Specimen.Instance.Log.LogError($"[AutoUpdateMod]CopyAssetError {Config.RepositoryOwner}/{Config.RepositoryName}: {error}");
+        _window.SetProgressInfosText(ColorHelpers.Colorize(Color.red, $"Error in {asset.Name} update:\n {error}"));
     }
     
     private void CopyAssetEnd(GithubAsset asset)
     {
+        _window.SetProgressInfosText(ColorHelpers.Colorize(UIPalette.Info, $"{asset.Name} successfully updated! Update will be applied after a game restart"));
     }
     
     private bool IsUpdateAsset(GithubAsset asset)
