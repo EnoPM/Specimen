@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using AmongUsSpecimen.UI;
+using AmongUsSpecimen.UI.Components;
 using AmongUsSpecimen.UI.Extensions;
 using AmongUsSpecimen.Utils;
 using BepInEx.Unity.IL2CPP.Utils;
 using UnityEngine;
 using UnityEngine.UI;
 using UniverseLib.UI;
-using UniverseLib.UI.Models;
 
 namespace AmongUsSpecimen.Updater;
 
@@ -15,7 +15,7 @@ public class UpdaterWindow : UiWindow
 {
     private readonly AutoUpdatedMod UpdatedMod;
     
-    public UpdaterWindow(UIBase owner, AutoUpdatedMod update) : base(owner)
+    public UpdaterWindow(AutoUpdatedMod update)
     {
         UpdatedMod = update;
         _selectedRelease = UpdatedMod.LatestRelease;
@@ -52,71 +52,53 @@ public class UpdaterWindow : UiWindow
     
     private void BuildWindow()
     {
-        _titleContainer = UIFactory.CreateHorizontalGroup(ContentRoot, "TitleContainer", false, false, true, true,
+        _titleContainer = UiFactory.CreateHorizontalGroup(ContentRoot, "TitleContainer", false, false, true, true,
             0, new Vector4(5f, 5f, 5f, 0f), UIPalette.Transparent);
-        UIFactory.SetLayoutElement(_titleContainer, minHeight: 40, flexibleHeight: 0, minWidth: MinWidth,
+        UiFactory.SetLayoutElement(_titleContainer, minHeight: 40, flexibleHeight: 0, minWidth: MinWidth,
             flexibleWidth: 0);
         
-        Specimen.Instance.Log.LogMessage($"{nameof(ConstructWindowContent)}: 1");
-        
-        _categoryTitle = UIFactory.CreateLabel(_titleContainer, "Title", "Select a version to install:", TextAnchor.MiddleLeft,
+        _categoryTitle = UiFactory.CreateLabel(_titleContainer, "Title", "Select a version to install:", TextAnchor.MiddleLeft,
             UIPalette.Secondary, true, 18);
         _categoryTitle.fontStyle = FontStyle.Bold;
-        UIFactory.SetLayoutElement(_categoryTitle.gameObject, minWidth: 260, flexibleWidth: 0, minHeight: 40,
+        UiFactory.SetLayoutElement(_categoryTitle.gameObject, minWidth: 260, flexibleWidth: 0, minHeight: 40,
             flexibleHeight: 0);
         
-        Specimen.Instance.Log.LogMessage($"{nameof(ConstructWindowContent)}: 2");
-        
-        var releaseNameContainer = UIFactory.CreateHorizontalGroup(ContentRoot, "ReleaseNameContainer", false, false, true, true,
+        var releaseNameContainer = UiFactory.CreateHorizontalGroup(ContentRoot, "ReleaseNameContainer", false, false, true, true,
             0, new Vector4(5f, 5f, 5f, 0f), UIPalette.Transparent, TextAnchor.MiddleCenter);
-        UIFactory.SetLayoutElement(releaseNameContainer, minHeight: 35, flexibleHeight: 0, minWidth: MinWidth,
+        UiFactory.SetLayoutElement(releaseNameContainer, minHeight: 35, flexibleHeight: 0, minWidth: MinWidth,
             flexibleWidth: 0);
-        _releaseName = UIFactory.CreateLabel(releaseNameContainer, "ReleaseTitle", string.Empty, TextAnchor.MiddleCenter, fontSize: 30);
-        UIFactory.SetLayoutElement(_releaseName.gameObject, MinWidth, flexibleWidth: 0, minHeight: 35, flexibleHeight: 0);
+        _releaseName = UiFactory.CreateLabel(releaseNameContainer, "ReleaseTitle", string.Empty, TextAnchor.MiddleCenter, fontSize: 30);
+        UiFactory.SetLayoutElement(_releaseName.gameObject, MinWidth, flexibleWidth: 0, minHeight: 35, flexibleHeight: 0);
         
-        Specimen.Instance.Log.LogMessage($"{nameof(ConstructWindowContent)}: 3");
-        
-        var buttonsContainer = UIFactory.CreateVerticalGroup(ContentRoot, "ButtonsContainer", false, false, true, true,
+        var buttonsContainer = UiFactory.CreateVerticalGroup(ContentRoot, "ButtonsContainer", false, false, true, true,
             0, new Vector4(5f, 5f, 5f, 0f), UIPalette.Transparent, TextAnchor.MiddleCenter);
-        UIFactory.SetLayoutElement(buttonsContainer, minHeight: 60, flexibleHeight: 0, minWidth: MinWidth,
+        UiFactory.SetLayoutElement(buttonsContainer, minHeight: 60, flexibleHeight: 0, minWidth: MinWidth,
             flexibleWidth: 0);
-        _downloadButton = UIFactory.CreateButton(buttonsContainer, "DownloadButton", "Download & Install", UIPalette.Success);
-        UIFactory.SetLayoutElement(_downloadButton.GameObject, 300, flexibleWidth: 0, minHeight: 30, flexibleHeight: 0);
+        _downloadButton = UiFactory.CreateButton(buttonsContainer, "DownloadButton", "Download & Install", UIPalette.Success);
+        UiFactory.SetLayoutElement(_downloadButton.GameObject, 300, flexibleWidth: 0, minHeight: 30, flexibleHeight: 0);
         _downloadButton.Component.SetColorsAuto(UIPalette.Success);
         _downloadButton.ButtonText.fontSize = 18;
         _downloadButton.ButtonText.fontStyle = FontStyle.Bold;
         _downloadButton.OnClick = OnDownloadButtonClick;
-        
-        Specimen.Instance.Log.LogMessage($"{nameof(ConstructWindowContent)}: 4");
 
         _progressBar = new UI.Components.ProgressBar(buttonsContainer, MinWidth - 40, 30);
         _progressBar.SetActive(false);
-        
-        Specimen.Instance.Log.LogMessage($"{nameof(ConstructWindowContent)}: 5");
 
-        _progressInfos = UIFactory.CreateLabel(buttonsContainer, "ProgressInfos", string.Empty, TextAnchor.MiddleCenter, UIPalette.Secondary);
-        UIFactory.SetLayoutElement(_progressInfos.gameObject, MinWidth, flexibleWidth: 0, minHeight: 40, flexibleHeight: 0);
+        _progressInfos = UiFactory.CreateLabel(buttonsContainer, "ProgressInfos", string.Empty, TextAnchor.MiddleCenter, UIPalette.Secondary);
+        UiFactory.SetLayoutElement(_progressInfos.gameObject, MinWidth, flexibleWidth: 0, minHeight: 40, flexibleHeight: 0);
         _progressInfos.gameObject.SetActive(false);
         
-        Specimen.Instance.Log.LogMessage($"{nameof(ConstructWindowContent)}: 6");
-        
-        var scrollbarContainer = UIFactory.CreateVerticalGroup(ContentRoot, "ScrollbarContainer", false, false, true,
+        var scrollbarContainer = UiFactory.CreateVerticalGroup(ContentRoot, "ScrollbarContainer", false, false, true,
             true, 0, new Vector4(10f, 0f, 0f, 0f), UIPalette.Transparent);
-        UIFactory.SetLayoutElement(scrollbarContainer, minHeight: 400, flexibleHeight: 0, minWidth: MinWidth,
+        UiFactory.SetLayoutElement(scrollbarContainer, minHeight: 400, flexibleHeight: 0, minWidth: MinWidth,
             flexibleWidth: 0);
         
-        Specimen.Instance.Log.LogMessage($"{nameof(ConstructWindowContent)}: 7");
+        var scrollerObject = UiFactory.CreateScrollView(scrollbarContainer, "ReleaseScrollView", out var content, out _);
+        UiFactory.SetLayoutElement(scrollerObject, MinWidth, 25, 0, 9999);
+        UiFactory.SetLayoutElement(content, MinWidth, 25, 0, 9999);
         
-        var scrollerObject = UIFactory.CreateScrollView(scrollbarContainer, "ReleaseScrollView", out var content, out _);
-        UIFactory.SetLayoutElement(scrollerObject, MinWidth, 25, 0, 9999);
-        UIFactory.SetLayoutElement(content, MinWidth, 25, 0, 9999);
-        
-        Specimen.Instance.Log.LogMessage($"{nameof(ConstructWindowContent)}: 8");
-        
-        _releaseDescription = UIFactory.CreateLabel(content, "ReleaseDescription", string.Empty, TextAnchor.UpperLeft, fontSize: 18);
-        UIFactory.SetLayoutElement(_releaseDescription.gameObject, MinWidth, flexibleWidth: 0, minHeight: 40, flexibleHeight: 0);
-        
-        Specimen.Instance.Log.LogMessage($"{nameof(ConstructWindowContent)}: 9");
+        _releaseDescription = UiFactory.CreateLabel(content, "ReleaseDescription", string.Empty, TextAnchor.UpperLeft, fontSize: 18);
+        UiFactory.SetLayoutElement(_releaseDescription.gameObject, MinWidth, flexibleWidth: 0, minHeight: 40, flexibleHeight: 0);
         
         Header.SetText($"{Title} {UpdatedMod.Config.RepositoryOwner}/{UpdatedMod.Config.RepositoryName}");
         
@@ -185,9 +167,9 @@ public class UpdaterWindow : UiWindow
         }
     }
 
-    public void RefreshDropdown(GithubRelease latestRelease = null)
+    private void RefreshDropdown(GithubRelease latestRelease = null)
     {
-        if (_dropdownObject) UnityEngine.Object.Destroy(_dropdownObject);
+        if (_dropdownObject) Object.Destroy(_dropdownObject);
         var defaultItemText = string.Empty;
         _githubReleases.Clear();
         if (UpdatedMod.Releases != null)
@@ -222,7 +204,7 @@ public class UpdaterWindow : UiWindow
                 }
             }
         }
-        _dropdownObject = UIFactory.CreateDropdown(
+        _dropdownObject = UiFactory.CreateDropdown(
             _titleContainer, 
             "VersionSelector", 
             out _, 
@@ -230,7 +212,7 @@ public class UpdaterWindow : UiWindow
             16,
             OnVersionDropdownChanged,
             _githubReleases.Keys.ToArray());
-        UIFactory.SetLayoutElement(_dropdownObject, minWidth: 275, flexibleWidth: 0, minHeight: 40, flexibleHeight: 0);
+        UiFactory.SetLayoutElement(_dropdownObject, minWidth: 275, flexibleWidth: 0, minHeight: 40, flexibleHeight: 0);
         if (latestRelease != null)
         {
             _selectedRelease = latestRelease;

@@ -9,7 +9,7 @@ namespace AmongUsSpecimen.UI;
 
 public abstract class UiWindow : PanelBase
 {
-    protected UiWindow(UIBase owner) : base(owner)
+    protected UiWindow() : base(UiManager.UIBase)
     {
         UiManager.Windows.Add(this);
     }

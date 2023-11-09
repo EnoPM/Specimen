@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -20,5 +21,11 @@ public static class AssemblyHelpers
 
             return assemblies;
         }
+    }
+
+    internal static Assembly EmbeddedAssemblyResolver(object sender, ResolveEventArgs args)
+    {
+        var libName = args.Name.Split(", ")[0];
+        return !Specimen.EmbeddedLibraries.Contains(libName) ? null : Assembly.GetExecutingAssembly().LoadEmbeddedLibrary(libName);
     }
 }

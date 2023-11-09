@@ -2,7 +2,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UniverseLib.UI;
-using UniverseLib.UI.Models;
 
 namespace AmongUsSpecimen.UI.Components;
 
@@ -15,23 +14,23 @@ public class WindowHeader
     
     public WindowHeader(UiWindow window, string title)
     {
-        _bar = UIFactory.CreateHorizontalGroup(window.ContentRoot, "TitleBar", 
+        _bar = UiFactory.CreateHorizontalGroup(window.ContentRoot, "TitleBar", 
             false, true, true, true, 2,
             new Vector4(5, 5, 10, 2), UIPalette.Black);
-        UIFactory.SetLayoutElement(_bar, minHeight: 25, flexibleHeight: 0);
+        UiFactory.SetLayoutElement(_bar, minHeight: 25, flexibleHeight: 0);
         
-        _title =  UIFactory.CreateLabel(_bar, "TitleBar", title, TextAnchor.MiddleLeft, UIPalette.Secondary,
+        _title =  UiFactory.CreateLabel(_bar, "TitleBar", title, TextAnchor.MiddleLeft, UIPalette.Secondary,
             true, 20);
-        UIFactory.SetLayoutElement(_title.gameObject, 50, 25, 9999, 0);
+        UiFactory.SetLayoutElement(_title.gameObject, 50, 25, 9999, 0);
 
-        _closeButtonContainer = UIFactory.CreateUIObject("CloseHolder", _bar);
-        UIFactory.SetLayoutGroup<HorizontalLayoutGroup>(_closeButtonContainer, false, false, true, true, 3,
+        _closeButtonContainer = UiFactory.CreateUIObject("CloseHolder", _bar);
+        UiFactory.SetLayoutGroup<HorizontalLayoutGroup>(_closeButtonContainer, false, false, true, true, 3,
             childAlignment: TextAnchor.MiddleRight);
         
-        _closeButton = UIFactory.CreateButton(_closeButtonContainer, "CloseButton", "╳");
+        _closeButton = UiFactory.CreateButton(_closeButtonContainer, "CloseButton", "╳");
         _closeButton.ButtonText.fontSize = 25;
         
-        UIFactory.SetLayoutElement(_closeButton.Component.gameObject, minHeight: 30, minWidth: 30, flexibleWidth: 0);
+        UiFactory.SetLayoutElement(_closeButton.Component.gameObject, minHeight: 30, minWidth: 30, flexibleWidth: 0);
         _closeButton.Component.SetColors(normal: UIPalette.Danger, hover: UIPalette.LightDanger, pressed: UIPalette.LightDanger, focused: UIPalette.Danger);
         
         _closeButton.OnClick += window.TriggerClose;

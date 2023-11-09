@@ -16,17 +16,17 @@ public class ProgressBar
     public ProgressBar(GameObject root, int width, int height)
     {
         _maxBarWidth = width - 2;
-        Container = UIFactory.CreateHorizontalGroup(root, "ProgressBarContainer",
+        Container = UiFactory.CreateHorizontalGroup(root, "ProgressBarContainer",
             false, true, true, true, 0,
             new Vector4(1f, 1f, 1f, 1f), UIPalette.Secondary, TextAnchor.MiddleLeft);
 
-        UIFactory.SetLayoutElement(Container, minWidth: width, minHeight: height, flexibleHeight: 0);
+        UiFactory.SetLayoutElement(Container, minWidth: width, minHeight: height, flexibleHeight: 0);
 
-        Bar = UIFactory.CreateHorizontalGroup(Container, "ProgressBar", false, true, false, true,
+        Bar = UiFactory.CreateHorizontalGroup(Container, "ProgressBar", false, true, false, true,
             bgColor: UIPalette.Info, childAlignment: TextAnchor.MiddleCenter);
-        _barLayout = UIFactory.SetLayoutElement(Bar, minWidth: 1, minHeight: height - 2);
+        _barLayout = UiFactory.SetLayoutElement(Bar, minWidth: 1, minHeight: height - 2);
         PercentageText =
-            UIFactory.CreateLabel(Bar, "PercentageText", "0%", TextAnchor.MiddleCenter, UIPalette.Secondary, true, 14);
+            UiFactory.CreateLabel(Bar, "PercentageText", "0%", TextAnchor.MiddleCenter, UIPalette.Secondary, true, 14);
         PercentageText.horizontalOverflow = HorizontalWrapMode.Overflow;
         PercentageText.gameObject.SetActive(false);
     }

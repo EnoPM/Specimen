@@ -44,7 +44,7 @@ public static class AttributeHelpers
             .Where(x => x is { IsClass: true });
         foreach (var classType in classes)
         {
-            var attribute = (T?)classType.GetCustomAttributes(typeof(T), false).FirstOrDefault();
+            var attribute = (T)classType.GetCustomAttributes(typeof(T), false).FirstOrDefault();
             if (attribute != null)
             {
                 results.Add(new AttributeClassResult<T>(attribute, classType));

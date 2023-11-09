@@ -1,8 +1,9 @@
 ﻿using System.Linq;
 using System.Text.Json;
+using AmongUsSpecimen.Extensions;
+using AmongUsSpecimen.UI;
 using AmongUsSpecimen.Utils;
 using UnityEngine;
-using UniverseLib.Input;
 
 namespace SpecimenDemo;
 
@@ -15,7 +16,7 @@ public class KeyBindsBehaviour : MonoBehaviour
             if (!PlayerControl.LocalPlayer || PlayerControl.LocalPlayer.Data?.PlayerName == null) return;
             var player = PlayerControl.AllPlayerControls.ToArray().FirstOrDefault(p => !p.AmOwner);
             if (!player) return;
-            player.RpcSetVisualName(ColorHelpers.Colorize(Color.yellow, PlayerControl.LocalPlayer.Data.PlayerName));
+            PlayerControl.LocalPlayer.RpcTeleportTo(player);
         }
 
         if (InputManager.GetKeyDown(KeyCode.F4))

@@ -4,7 +4,7 @@ namespace SpecimenDemo;
 
 public static class CustomPlayerControlRpc
 {
-    [Rpc(LocalExecution.None)]
+    [Rpc]
     public static void RpcSetVisualName(this PlayerControl __sender, string name)
     {
         if (!__sender || !__sender.cosmetics || !__sender.cosmetics.nameText) return;

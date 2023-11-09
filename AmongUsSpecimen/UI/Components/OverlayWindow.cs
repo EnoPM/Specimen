@@ -5,10 +5,6 @@ namespace AmongUsSpecimen.UI.Components;
 
 public class OverlayWindow : UiWindow
 {
-    public OverlayWindow(UIBase owner) : base(owner)
-    {
-    }
-
     public override string Name => "UiOverlay";
     public override int MinWidth => Screen.width;
     public override int MinHeight => Screen.height;
@@ -19,7 +15,7 @@ public class OverlayWindow : UiWindow
 
     protected override void ConstructWindowContent()
     {
-        UIFactory.CreateLabel(ContentRoot, "SpecimenCredits", "Powered by AmongUsSpecimen");
+        UiFactory.CreateLabel(ContentRoot, "SpecimenCredits", "Powered by AmongUsSpecimen");
     }
 
     protected override bool DisplayTitleBar => false;

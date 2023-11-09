@@ -26,8 +26,12 @@
 
     <ItemGroup>
       <Reference Include="UniverseLib.IL2CPP">
-        <HintPath>libs\UniverseLib.IL2CPP.dll</HintPath>
+        <HintPath>Resources\Library\UniverseLib.IL2CPP.dll</HintPath>
+        <Private>False</Private>
       </Reference>
+    </ItemGroup>
+    <ItemGroup>
+      <EmbeddedResource Include="Resources\Library\UniverseLib.IL2CPP.dll" />
     </ItemGroup>
 
     <Target Name="CopyPlugins" AfterTargets="AfterBuild">

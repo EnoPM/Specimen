@@ -71,7 +71,6 @@ public static class UiManager
     internal static void UpdateOverlayState()
     {
         var state = Windows.Any(window => window.Enabled && window.HasOverlay);
-        Specimen.Instance.Log.LogMessage($"SetOverlayState: {state}");
         _overlay?.SetActive(state);
         if (!state) return;
         foreach (var window in Windows.Where(window => window.Enabled && window != _overlay))
@@ -88,22 +87,20 @@ public static class UiManager
         }
     }
 
-    public static TWindow RegisterWindow<TWindow>(params object[] constructorArguments) where TWindow : UiWindow
+    public static TWindow RegisterWindow<TWindow>(params object[] parameters) where TWindow : UiWindow
     {
         if (!IsReady)
         {
             throw new Exception($"Cannot register UiWindow before UiManager is ready");
         }
-
-        var arguments = new List<object> { UIBase };
-        arguments.AddRange(constructorArguments);
-        var argumentTypes = arguments.Select(argument => argument.GetType()).ToArray();
         
-        var constructor = typeof(TWindow).GetConstructor(argumentTypes);
+        var types = parameters.Select(x => x.GetType()).ToArray();
+        
+        var constructor = typeof(TWindow).GetConstructor(types);
         if (constructor == null)
         {
-            throw new Exception($"Unable to find constructor for type {typeof(TWindow).Name} with argument types {string.Join(", " , argumentTypes.Select(x => x.Name).ToList())}");
+            throw new Exception($"Unable to find constructor for type {typeof(TWindow).Name} with argument types {string.Join(", " , types.Select(x => x.Name).ToList())}");
         }
-        return (TWindow)constructor.Invoke(arguments.ToArray());
+        return (TWindow)constructor.Invoke(parameters);
     }
 }

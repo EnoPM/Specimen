@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AmongUsSpecimen.Utils;
@@ -15,6 +17,8 @@ namespace AmongUsSpecimen;
 public static class RpcManager
 {
     internal const byte ReservedRpcCallId = 249;
+    private const string SenderParameterName = "__sender";
+    private static readonly Type SenderParameterType = typeof(PlayerControl);
     
     private static ManualLogSource LogSource => Specimen.Instance.Log;
     private static Harmony Harmony => Specimen.Harmony;
@@ -27,27 +31,46 @@ public static class RpcManager
 
     private static readonly JsonSerializerOptions SerializerOptions = new() { Converters = { new UnityColorConverter(), new PlayerControlConverter() }};
 
-    internal static void Load()
-    {
-        foreach (var assembly in AssemblyHelpers.AllAssemblies)
-        {
-            LoadAssembly(assembly);
-        }
-    }
-
-    public static void LoadAssembly(Assembly assembly)
+    public static void RegisterAssembly(Assembly assembly)
     {
         var methods = assembly.GetMethodsByAttribute<RpcAttribute>();
-        LogMessage($"{methods.Count} methods to register in assembly {assembly.FullName}");
+        LogMessage($"{methods.Count} rpc methods to register in assembly {assembly.FullName}");
         foreach (var method in methods)
         {
             RegisterMethodResult(method);
         }
     }
 
+    private static string GetSignature(MethodInfo methodInfo)
+    {
+        var sb = new StringBuilder();
+        sb.Append(methodInfo.DeclaringType?.FullName)
+            .Append(methodInfo.Name);
+        foreach (var parameter in methodInfo.GetParameters())
+        {
+            sb.Append(parameter.ParameterType.FullName)
+                .Append(parameter.Name)
+                .Append(parameter.Position)
+                .Append(parameter.IsOptional);
+        }
+
+        sb.Append(methodInfo.ReturnType.FullName);
+
+        return sb.ToString();
+    }
+
+    private static string GetSignatureHash(MethodInfo methodInfo)
+    {
+        using var crypto = SHA1.Create();
+        var signature = GetSignature(methodInfo);
+        var source = Encoding.UTF8.GetBytes(signature);
+        var hash = crypto.ComputeHash(source);
+        return BitConverter.ToString(hash).Replace("-", string.Empty);
+    }
+
     private static void RegisterMethodResult(AttributeHelpers.AttributeMethodResult<RpcAttribute> methodResult)
     {
-        var id = $"{methodResult.Method.DeclaringType?.FullName}#{methodResult.Method.Name}";
+        var id = GetSignatureHash(methodResult.Method);
         if (AllRpc.TryGetValue(id, out var alreadyRegistered))
         {
             LogWarning(
@@ -69,31 +92,33 @@ public static class RpcManager
     {
         public static bool DynamicPrefix(MethodBase __originalMethod, object[] __args)
         {
-            var rpc = AllRpc.Values.FirstOrDefault(r => r.OriginalMethod == __originalMethod);
-            if (rpc == null) return false;
-
-            var data = new List<string>();
-
-            var parameters = rpc.OriginalMethod.GetParameters().ToList();
-            var localParameterIndexes = new List<int> { parameters.FindIndex(IsSenderParameter) };
-            PlayerControl sender = null;
-
-            for (var i = 0; i < __args.Length; i++)
-            {
-                if (localParameterIndexes.Contains(i))
-                {
-                    sender = (PlayerControl)__args[i];
-                    continue;
-                }
-                data.Add(JsonSerializer.Serialize(__args[i]));
-            }
-
-            var id = $"{__originalMethod.DeclaringType?.FullName}#{__originalMethod.Name}";
-
-            new RpcData { Id = id, Data = data }.Send(sender);
-
-            return rpc.Attribute.Execution == LocalExecution.Before && sender && sender != PlayerControl.LocalPlayer;
+            var data = AllRpc.FirstOrDefault(r => r.Value.OriginalMethod == __originalMethod);
+            if (data.Value == null) return false;
+            var (id, rpc) = data;
+            TriggerRpcCall(id, rpc, __args);
+            return rpc.Attribute.Execution == LocalExecution.Before;
         }
+    }
+
+    private static void TriggerRpcCall(string id, RegisteredRpc rpc, object[] args)
+    {
+        var data = new List<string>();
+
+        var parameters = rpc.OriginalMethod.GetParameters().ToList();
+        var localParameterIndexes = new List<int> { parameters.FindIndex(IsSenderParameter) };
+        var sender = PlayerControl.LocalPlayer;
+
+        for (var i = 0; i < args.Length; i++)
+        {
+            if (localParameterIndexes.Contains(i))
+            {
+                sender = (PlayerControl)args[i];
+                continue;
+            }
+            data.Add(JsonSerializer.Serialize(args[i]));
+        }
+
+        new RpcData { Id = id, Data = data }.Send(sender);
     }
 
     internal static void HandleRpc(PlayerControl sender, MessageReader reader)
@@ -108,7 +133,7 @@ public static class RpcManager
         if (sender.AmOwner)
         {
             LogWarning($"HandleRpc: AmOwner of rpc call {data.Id}");
-            if (rpc.Attribute.Execution != LocalExecution.After) return;
+            if (rpc.Attribute.Execution != LocalExecution.None) return;
         }
         var parameters = rpc.OriginalMethod.GetParameters();
         var args = new List<object>();
@@ -165,8 +190,8 @@ public static class RpcManager
 
     private static bool IsSenderParameter(ParameterInfo parameter)
     {
-        if (parameter.Name != "__sender") return false;
-        return parameter.ParameterType == typeof(PlayerControl);
+        if (parameter.Name != SenderParameterName) return false;
+        return parameter.ParameterType == SenderParameterType;
     }
 }
 
@@ -232,7 +257,7 @@ public class RpcAttribute : Attribute
 {
     public readonly LocalExecution Execution;
 
-    public RpcAttribute(LocalExecution execution = LocalExecution.After)
+    public RpcAttribute(LocalExecution execution = LocalExecution.Before)
     {
         Execution = execution;
     }
@@ -242,5 +267,4 @@ public enum LocalExecution
 {
     None,
     Before,
-    After
 }
