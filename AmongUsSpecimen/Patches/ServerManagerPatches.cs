@@ -28,11 +28,10 @@ internal static class ServerManagerPatches
                     {
                         TypeNameHandling = TypeNameHandling.Auto
                     });
-                jsonServerData.CleanAndMerge(CustomRegionsManager.DefaultRegions);
-                __instance.AvailableRegions = jsonServerData.Regions;
-                __instance.CurrentRegion =
-                    __instance.AvailableRegions[
-                        jsonServerData.CurrentRegionIdx.Wrap(__instance.AvailableRegions.Length)];
+                var regions = CustomRegionsManager.CleanAndMerge(jsonServerData.Regions);
+                __instance.AvailableRegions = regions;
+                Specimen.Instance.Log.LogMessage($"Regions length: {regions.Length}");
+                __instance.CurrentRegion = __instance.AvailableRegions[jsonServerData.CurrentRegionIdx.Wrap(regions.Length)];
                 __instance.CurrentUdpServer = __instance.CurrentRegion.Servers.ToList().GetOneRandom();
                 __instance.state = UpdateState.Success;
                 __instance.SaveServers();
@@ -57,15 +56,16 @@ internal static class ServerManagerPatches
     {
         try
         {
-            FileIO.WriteAllText(CustomRegionsManager.RegionFileJson, JsonConvert.SerializeObject(new ServerManager.JsonServerData
-            {
-                CurrentRegionIdx = __instance.AvailableRegions.ToList()
-                    .FindIndex(r => r.Name == __instance.CurrentRegion.Name),
-                Regions = __instance.AvailableRegions
-            }, new JsonSerializerSettings
-            {
-                TypeNameHandling = TypeNameHandling.Auto
-            }));
+            FileIO.WriteAllText(CustomRegionsManager.RegionFileJson, JsonConvert.SerializeObject(
+                new ServerManager.JsonServerData
+                {
+                    CurrentRegionIdx = __instance.AvailableRegions.ToList()
+                        .FindIndex(r => r.Name == __instance.CurrentRegion.Name),
+                    Regions = __instance.AvailableRegions
+                }, new JsonSerializerSettings
+                {
+                    TypeNameHandling = TypeNameHandling.Auto
+                }));
         }
         catch (Exception exception)
         {
@@ -80,7 +80,8 @@ internal static class ServerManagerPatches
         if (!ServerManager.InstanceExists) yield break;
         var sm = ServerManager.Instance;
         sm.AvailableRegions = CustomRegionsManager.DefaultRegions;
-        var dnsLookup = CustomRegionsManager.DefaultRegions.Select(r => Dns.GetHostAddressesAsync(r.PingServer)).ToList();
+        var dnsLookup = CustomRegionsManager.DefaultRegions.Select(r => Dns.GetHostAddressesAsync(r.PingServer))
+            .ToList();
         while (dnsLookup.Any(task => !task.IsCompleted))
         {
             yield return null;
@@ -107,11 +108,14 @@ internal static class ServerManagerPatches
             }
             else
             {
-                pings.Add(new ServerManager.PingWrapper(defaultRegion, new Ping(result.ToList().GetOneRandom().ToString())));
+                pings.Add(new ServerManager.PingWrapper(defaultRegion,
+                    new Ping(result.ToList().GetOneRandom().ToString())));
             }
         }
 
-        for (var timeElapsedSeconds = 0f; pings.Count > 0 && timeElapsedSeconds < 5f && !pings.Any(p => p.Ping.isDone && p.Ping.time >= 0); timeElapsedSeconds += Time.deltaTime)
+        for (var timeElapsedSeconds = 0f;
+             pings.Count > 0 && timeElapsedSeconds < 5f && !pings.Any(p => p.Ping.isDone && p.Ping.time >= 0);
+             timeElapsedSeconds += Time.deltaTime)
         {
             yield return null;
         }
@@ -128,9 +132,10 @@ internal static class ServerManagerPatches
                     num = pingWrapper.Ping.time;
                 }
             }
+
             pingWrapper.Ping.DestroyPing();
         }
-        
+
         sm.CurrentRegion = regionInfo.Duplicate();
         sm.ReselectServer();
         sm.SaveServers();

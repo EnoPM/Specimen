@@ -1,14 +1,12 @@
-﻿using System.Reflection;
-using BepInEx;
+﻿using BepInEx;
 using BepInEx.Unity.IL2CPP;
 using AmongUsSpecimen;
-using UnityEngine;
 
 namespace SpecimenDemo;
 
 [BepInPlugin(Guid, Name, Version)]
 [BepInDependency(Specimen.Guid)]
-[CustomRegion("Specimen", "specimen.eno.pm", "https://specimen.eno.pm", color: "#ff0000")]
+[CustomRegion("Specimen", "specimen.eno.pm", "https://specimen.eno.pm", color: "#ff00ff")]
 public class DemoPlugin : BasePlugin
 {
     private const string Guid = "demo.specimen.eno.pm";

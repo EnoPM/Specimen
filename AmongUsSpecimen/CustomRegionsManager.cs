@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using AmongUsSpecimen.Extensions;
 using AmongUsSpecimen.Utils;
 using BepInEx;
 using BepInEx.Logging;
-using HarmonyLib;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using UnityEngine;
 
@@ -14,9 +15,9 @@ namespace AmongUsSpecimen;
 public static class CustomRegionsManager
 {
     public static readonly string RegionFileJson = Path.Combine(Paths.PluginPath, "Specimen", "Regions.json");
-    
+
     private static ManualLogSource LogSource => Specimen.Instance.Log;
-    
+
     private static readonly Dictionary<string, RegisteredRpc> AllRpc = new();
     private static void LogMessage(string message) => LogSource.LogMessage($"[{nameof(RpcManager)}] {message}");
     private static void LogDebug(string message) => LogSource.LogDebug($"[{nameof(RpcManager)}] {message}");
@@ -49,10 +50,34 @@ public static class CustomRegionsManager
         {
             var r = result.Attribute;
             var name = r.Color != null ? ColorHelpers.Colorize(r.Color.Value, r.Name) : r.Name;
-            DefaultRegions = DefaultRegions.AddToArray(CreateRegion(name, r.PingServer, r.Host, r.Port));
+            DefaultRegions = CleanAndMerge(new[] { CreateRegion(name, r.PingServer, r.Host, r.Port) });
         }
     }
-    
+
+    internal static IRegionInfo[] CleanAndMerge(IRegionInfo[] currentRegions)
+    {
+        var list = currentRegions.Where((Func<IRegionInfo, bool>)(r => r.Validate())).ToList();
+        list.AddRange(DefaultRegions);
+        var cache = new List<IRegionInfo>(list);
+        foreach (var region in list)
+        {
+            var index = cache.FindIndex(r =>
+                r.PingServer.Equals(region.PingServer, StringComparison.OrdinalIgnoreCase) &&
+                r.Servers[0].Ip.Equals(region.Servers[0].Ip, StringComparison.OrdinalIgnoreCase));
+            if (index == -1)
+            {
+                cache.Insert(0, region);
+            }
+            else
+            {
+                cache[index] = region;
+            }
+        }
+
+        Specimen.Instance.Log.LogMessage($"Cache length: {cache.Count}");
+        return cache.Deduplicate((a, b) => a.PingServer == b.PingServer && a.Servers[0].Ip == b.Servers[0].Ip)
+            .ToArray();
+    }
 }
 
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
@@ -63,7 +88,7 @@ public class CustomRegionAttribute : Attribute
     public readonly string Host;
     public readonly ushort Port;
     public readonly Color? Color;
-    
+
     public CustomRegionAttribute(string name, string pingServer, string host, ushort port = 443, string color = "")
     {
         Name = name;
