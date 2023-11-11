@@ -22,7 +22,7 @@ public abstract class UiWindow : PanelBase
     protected virtual Positions Position => Positions.MiddleCenter;
     protected virtual Vector4 Paddings => Vector4.zero;
     protected virtual int Spacing => 0;
-    public virtual bool DisableClickThroughWindow => true;
+    public virtual bool DisableGameClickWhenOpened => true;
     protected WindowHeader Header { get; set; }
     
     public float InnerWidth => MinWidth - Paddings.y - Paddings.w;

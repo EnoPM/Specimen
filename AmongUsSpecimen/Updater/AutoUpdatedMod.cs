@@ -42,8 +42,7 @@ public class AutoUpdatedMod
         yield return CoLoadReleases();
         if (Releases == null) yield break;
         _window = UiManager.RegisterWindow<UpdaterWindow>(this);
-        //_window = new UpdaterWindow(UiManager.UIBase, this);
-        _window.SetActive(true);
+        _window.SetActive(LatestRelease != null);
     }
 
     private IEnumerator CoLoadReleases()

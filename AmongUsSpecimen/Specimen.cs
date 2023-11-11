@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using AmongUsSpecimen.Attributes;
 using AmongUsSpecimen.UI;
 using AmongUsSpecimen.Updater;
 using AmongUsSpecimen.Utils;

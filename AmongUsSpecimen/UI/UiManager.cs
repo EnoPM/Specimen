@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using AmongUsSpecimen.Cosmetics;
 using AmongUsSpecimen.UI.Components;
 using BepInEx.Logging;
 using UnityEngine;
@@ -21,13 +22,14 @@ public static class UiManager
     internal static readonly List<UiWindow> Windows = new();
     private static OverlayWindow _overlay;
     internal static UiBehaviour Behaviour;
+    internal static CosmeticsDownloadWindow CosmeticsDownloadWindow;
 
     public static event Action Inizialized;
     
     public static bool IsReady { get; private set; }
 
     internal static bool ShouldBlockClickOnGameElements =>
-        Windows.Any(p => p is { Enabled: true, DisableClickThroughWindow: true });
+        Windows.Any(p => p is { Enabled: true, DisableGameClickWhenOpened: true });
 
     internal static void Init()
     {
@@ -46,6 +48,7 @@ public static class UiManager
         UiCanvas = UiRoot.GetComponent<Canvas>();
         IsReady = true;
         _overlay = RegisterWindow<OverlayWindow>();
+        CosmeticsDownloadWindow = RegisterWindow<CosmeticsDownloadWindow>();
         Behaviour = Specimen.Instance.AddComponent<UiBehaviour>();
         Inizialized?.Invoke();
     }

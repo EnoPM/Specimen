@@ -1,7 +1,6 @@
 ﻿using System;
-using AmongUsSpecimen.Updater;
 
-namespace AmongUsSpecimen.Attributes;
+namespace AmongUsSpecimen.Updater;
 
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
 public class ModUpdaterAttribute : Attribute

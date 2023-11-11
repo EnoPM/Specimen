@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using AmongUsSpecimen.Cosmetics;
 using BepInEx;
 using BepInEx.Unity.IL2CPP;
 
@@ -61,5 +62,6 @@ internal static class AssemblyExtensions
     {
         CustomRegionsManager.RegisterAssembly(assembly);
         RpcManager.RegisterAssembly(assembly);
+        CustomCosmeticsManager.RegisterAssembly(assembly);
     }
 }

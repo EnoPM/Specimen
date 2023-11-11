@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
+        <PackageId>Specimen</PackageId>
         <AssemblyName>AmongUsSpecimen</AssemblyName>
         <Description>Among Us BepinEx plugin updater</Description>
         <Version>0.0.1</Version>
@@ -13,6 +14,9 @@
             https://nuget.samboy.dev/v3/index.json
         </RestoreAdditionalProjectSources>
         <RootNamespace>AmongUsSpecimen</RootNamespace>
+        <Authors>EnoPM</Authors>
+        <PackageDescription>Among Us BepinEx modding framework</PackageDescription>
+        <RepositoryUrl>https://github.com/EnoPM/Specimen</RepositoryUrl>
     </PropertyGroup>
 
     <ItemGroup>
