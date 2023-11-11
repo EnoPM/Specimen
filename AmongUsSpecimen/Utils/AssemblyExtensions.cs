@@ -63,5 +63,6 @@ internal static class AssemblyExtensions
         CustomRegionsManager.RegisterAssembly(assembly);
         RpcManager.RegisterAssembly(assembly);
         CustomCosmeticsManager.RegisterAssembly(assembly);
+        RegisterInIl2CppAttribute.RegisterAssembly(assembly);
     }
 }

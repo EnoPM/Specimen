@@ -21,6 +21,7 @@ public class CosmeticsLoader : MonoBehaviour
     private IEnumerator CoFetchCosmetics(string repository, string manifestFileName)
     {
         isRunning = true;
+        
         var url = $"https://raw.githubusercontent.com/{repository}/master/{manifestFileName}";
         var www = new UnityWebRequest();
         www.SetMethod(UnityWebRequest.UnityWebRequestMethod.Get);
@@ -54,16 +55,35 @@ public class CosmeticsLoader : MonoBehaviour
 
     private static IEnumerator CoDownloadHats(ManifestFile response, string repository)
     {
+        while (CustomCosmeticsManager.CosmeticsDownloadWindow == null)
+        {
+            yield return new WaitForEndOfFrame();
+        }
+        var window = CustomCosmeticsManager.CosmeticsDownloadWindow;
         var hatsDirectory = CustomCosmeticsManager.HatsDirectory;
         if (!Directory.Exists(hatsDirectory)) Directory.CreateDirectory(hatsDirectory);
         CustomCosmeticsManager.UnregisteredHats.AddRange(CustomCosmeticsManager.SanitizeHats(response));
-        var toDownload = CustomCosmeticsManager.GenerateDownloadList(CustomCosmeticsManager.UnregisteredHats);
+        var toDownload = CustomCosmeticsManager.GenerateDownloadList(CustomCosmeticsManager.UnregisteredHats, out var totalFileCount);
         Specimen.Instance.Log.LogMessage($"{toDownload.Count} hat asset files to download");
-        foreach (var fileName in toDownload)
+        if (toDownload.Count > 0)
         {
-            yield return CoDownloadAssetFile($"https://raw.githubusercontent.com/{repository}/master/hats/{Uri.EscapeDataString(fileName)}", Path.Combine(hatsDirectory, fileName));
-            CustomCosmeticsManager.OnHatFileDownloaded(fileName);
+            window.SetActive(true);
+            window.InitProgression(totalFileCount, totalFileCount - toDownload.Count);
+            foreach (var fileName in toDownload)
+            {
+                window.NextAsset();
+                while (CustomCosmeticsManager.PauseDownloader)
+                {
+                    yield return new WaitForEndOfFrame();
+                }
+                yield return CoDownloadAssetFile($"https://raw.githubusercontent.com/{repository}/master/hats/{Uri.EscapeDataString(fileName)}", Path.Combine(hatsDirectory, fileName));
+                CustomCosmeticsManager.OnHatFileDownloaded(fileName);
+            }
+
+            yield return new WaitForSeconds(2f);
+            window.SetActive(false);
         }
+        
     }
 
     private static IEnumerator CoDownloadAssetFile(string fileUrl, string destination)

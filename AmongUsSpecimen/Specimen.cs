@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using AmongUsSpecimen.UI;
@@ -34,6 +35,7 @@ public class Specimen : BasePlugin
     internal static readonly Harmony Harmony = new(Guid);
     internal static readonly List<AutoUpdatedMod> AutoUpdatedMods = new();
     internal static readonly List<UpdateModConfig> UpdateRequests = new();
+    internal static string ResourcesDirectory => Path.Combine(Path.GetDirectoryName(Application.dataPath)!, "Specimen");
     internal UpdaterBehaviour UpdaterBehaviour;
 
     public ConfigEntry<KeyCode> ToggleUpdater { get; private set; }
@@ -44,6 +46,7 @@ public class Specimen : BasePlugin
 
         // Plugin startup logic
         ToggleUpdater = Config.Bind("Updater", "Toggle Updaters", KeyCode.F2);
+        if (!Directory.Exists(ResourcesDirectory)) Directory.CreateDirectory(ResourcesDirectory);
 
         Harmony.PatchAll();
         UiManager.Init();

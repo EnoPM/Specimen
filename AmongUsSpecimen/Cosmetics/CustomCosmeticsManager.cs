@@ -14,15 +14,17 @@ internal static class CustomCosmeticsManager
 {
     internal const string InnerslothHatPackageName = "Innersloth Hats";
     internal const string DeveloperHatPackageName = "Developer Hats";
-    private static string CustomSkinsDirectory => Path.Combine(Path.GetDirectoryName(Application.dataPath)!, "SpecimenCosmetics");
+    private static string CustomSkinsDirectory => Path.Combine(Specimen.ResourcesDirectory, "Cosmetics");
     internal static string HatsDirectory => Path.Combine(CustomSkinsDirectory, "Hats");
+    internal static CosmeticsDownloadWindow CosmeticsDownloadWindow { get; set; }
+    internal static bool PauseDownloader { get; set; }
     
     internal static readonly List<CustomHat> UnregisteredHats = new();
     internal static readonly Dictionary<string, CustomHat> RegisteredHats = new();
     internal static readonly Dictionary<string, HatViewData> HatViewDataCache = new();
-    internal static readonly List<HatParent> HatParentCache = new();
+    private static readonly List<HatParent> HatParentCache = new();
     internal static readonly Dictionary<string, HatExtension> HatExtensionCache = new();
-    internal static Dictionary<string, List<string>> HatFiles = new();
+    private static readonly Dictionary<string, List<string>> HatFiles = new();
     
     private static readonly CosmeticsLoader Loader;
     private static Material cachedShader;
@@ -66,12 +68,12 @@ internal static class CustomCosmeticsManager
         return false;
     }
     
-    internal static bool TryGetCached(this HatData hat, out HatViewData asset)
+    private static bool TryGetCached(this HatData hat, out HatViewData asset)
     {
         return HatViewDataCache.TryGetValue(hat.name, out asset);
     }
 
-    internal static bool IsCached(this HatData hat)
+    private static bool IsCached(this HatData hat)
     {
         return HatViewDataCache.ContainsKey(hat.name);
     }
@@ -163,7 +165,7 @@ internal static class CustomCosmeticsManager
         return sprite;
     }
 
-    internal static List<CustomHat> CreateHatDetailsFromFileNames(string[] fileNames, bool fromDisk = false)
+    internal static List<CustomHat> CreateHatDetailsFromFileNames(IEnumerable<string> fileNames, bool fromDisk = false)
     {
         var fronts = new Dictionary<string, CustomHat>();
         var backs = new Dictionary<string, string>();
@@ -330,8 +332,9 @@ internal static class CustomCosmeticsManager
         }
     }
 
-    internal static List<string> GenerateDownloadList(List<CustomHat> hats)
+    internal static List<string> GenerateDownloadList(List<CustomHat> hats, out int totalFileCount)
     {
+        totalFileCount = 0;
         var algorithm = MD5.Create();
         var toDownload = new List<string>();
 
@@ -342,19 +345,19 @@ internal static class CustomCosmeticsManager
             HatFiles[hat.Name] = new List<string>();
             var files = new List<Tuple<string, string>>
             {
-                new(hat.Resource, hat.ResHashA),
-                new(hat.BackResource, hat.ResHashB),
-                new(hat.ClimbResource, hat.ResHashC),
-                new(hat.FlipResource, hat.ResHashF),
-                new(hat.BackFlipResource, hat.ResHashBf)
+                new(hat.Resource, hat.Resource_Hash),
+                new(hat.BackResource, hat.BackResource_Hash),
+                new(hat.ClimbResource, hat.ClimbResource_Hash),
+                new(hat.FlipResource, hat.FlipResource_Hash),
+                new(hat.BackFlipResource, hat.BackFlipResource_Hash)
             };
             foreach (var (fileName, fileHash) in files)
             {
-                if (fileName != null && ResourceRequireDownload(Path.Combine(hatsDirectory, fileName), fileHash, algorithm))
-                {
-                    HatFiles[hat.Name].Add(fileName);
-                    toDownload.Add(fileName);
-                }
+                if (fileName == null) continue;
+                totalFileCount++;
+                if (!ResourceRequireDownload(Path.Combine(hatsDirectory, fileName), fileHash, algorithm)) continue;
+                HatFiles[hat.Name].Add(fileName);
+                toDownload.Add(fileName);
             }
         }
 

@@ -22,7 +22,6 @@ public static class UiManager
     internal static readonly List<UiWindow> Windows = new();
     private static OverlayWindow _overlay;
     internal static UiBehaviour Behaviour;
-    internal static CosmeticsDownloadWindow CosmeticsDownloadWindow;
 
     public static event Action Inizialized;
     
@@ -48,7 +47,7 @@ public static class UiManager
         UiCanvas = UiRoot.GetComponent<Canvas>();
         IsReady = true;
         _overlay = RegisterWindow<OverlayWindow>();
-        CosmeticsDownloadWindow = RegisterWindow<CosmeticsDownloadWindow>();
+        CustomCosmeticsManager.CosmeticsDownloadWindow = RegisterWindow<CosmeticsDownloadWindow>();
         Behaviour = Specimen.Instance.AddComponent<UiBehaviour>();
         Inizialized?.Invoke();
     }

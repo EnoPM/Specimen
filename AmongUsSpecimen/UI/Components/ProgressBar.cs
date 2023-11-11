@@ -13,12 +13,12 @@ public class ProgressBar
     private readonly LayoutElement _barLayout;
     private readonly float _maxBarWidth;
 
-    public ProgressBar(GameObject root, int width, int height)
+    public ProgressBar(GameObject root, int width, int height, Vector4? containerPadding = null)
     {
         _maxBarWidth = width - 2;
         Container = UiFactory.CreateHorizontalGroup(root, "ProgressBarContainer",
             false, true, true, true, 0,
-            new Vector4(1f, 1f, 1f, 1f), UIPalette.Secondary, TextAnchor.MiddleLeft);
+            containerPadding ?? Vector4.one, UIPalette.Secondary, TextAnchor.MiddleLeft);
 
         UiFactory.SetLayoutElement(Container, minWidth: width, minHeight: height, flexibleHeight: 0);
 

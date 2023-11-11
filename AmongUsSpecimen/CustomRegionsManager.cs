@@ -14,7 +14,7 @@ namespace AmongUsSpecimen;
 
 public static class CustomRegionsManager
 {
-    public static readonly string RegionFileJson = Path.Combine(Paths.PluginPath, "Specimen", "Regions.json");
+    public static readonly string RegionFileJson = Path.Combine(Specimen.ResourcesDirectory, "Regions.json");
 
     private static ManualLogSource LogSource => Specimen.Instance.Log;
 
@@ -36,7 +36,7 @@ public static class CustomRegionsManager
     {
         return new StaticHttpRegionInfo(name, translateName,
             pingServer,
-            new Il2CppReferenceArray<ServerInfo>(new ServerInfo[1]
+            new Il2CppReferenceArray<ServerInfo>(new ServerInfo[]
             {
                 new("Http-1", host, port, false)
             })).Cast<IRegionInfo>();
