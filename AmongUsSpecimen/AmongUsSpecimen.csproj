@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
-        <PackageId>Specimen</PackageId>
+        <PackageId>AmongUs.Specimen</PackageId>
         <AssemblyName>AmongUsSpecimen</AssemblyName>
         <Description>Among Us BepinEx plugin updater</Description>
         <Version>0.0.1</Version>
