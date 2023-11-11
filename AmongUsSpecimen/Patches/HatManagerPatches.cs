@@ -33,7 +33,7 @@ internal static class HatManagerPatches
             }
             catch (Exception err)
             {
-                Specimen.Instance.Log.LogWarning($"GetHatByIdPrefix: error for hat {hat.Name}");
+                Specimen.Instance.Log.LogWarning($"GetHatByIdPrefix: error for hat {hat.Name}: {err}");
             }
         }
         cache.Clear();
