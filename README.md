@@ -4,8 +4,17 @@ Specimen is a BepinEx plugin for Among Us that will relieve you of a lot of the 
 **NuGet feed:** `https://nuget.eno.pm/v3/index.json`
 **Package Id:** `AmongUs.Specimen`
 
-**Supported Among Us Versions:**
-- 2023.10.24 (current version).
+## Supported Versions:
+- **Among Us:** 2023.10.24 (current version)
+- **BepinEx:** 6.0.0-be671+
+
+## Installation
+- Download latest `AmongUs.Specimen.dll` file in [releases](https://github.com/EnoPM/Specimen/releases).
+- Place this file in the BepinEx/plugins folder of the game folder containing your mod.
+
+### For development
+- Add my NuGet feed (``https://nuget.eno.pm/v3/index.json``) to your nuget.config file.
+- Search and install latest version of `AmongUs.Specimen` from NuGet package manager.
 
 ## Features
 - A mod updater that allows players to download an older version or update your mod.
