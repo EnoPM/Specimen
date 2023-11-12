@@ -1,8 +1,8 @@
 # Specimen
 Specimen is a BepinEx plugin for Among Us that will relieve you of a lot of the work in mod development.
 
-**NuGet feed:** `https://nuget.eno.pm/v3/index.json`
-**Package Id:** `AmongUs.Specimen`
+- **NuGet feed:** `https://nuget.eno.pm/v3/index.json`
+- **Package Id:** `AmongUs.Specimen`
 
 ## Supported Versions:
 - **Among Us:** 2023.10.24 (current version)
