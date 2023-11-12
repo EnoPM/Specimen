@@ -16,8 +16,6 @@ internal static class CustomCosmeticsManager
     internal const string DeveloperHatPackageName = "Developer Hats";
     private static string CustomSkinsDirectory => Path.Combine(Specimen.ResourcesDirectory, "Cosmetics");
     internal static string HatsDirectory => Path.Combine(CustomSkinsDirectory, "Hats");
-    internal static CosmeticsDownloadWindow CosmeticsDownloadWindow { get; set; }
-    internal static bool PauseDownloader { get; set; }
     
     internal static readonly List<CustomHat> UnregisteredHats = new();
     internal static readonly Dictionary<string, CustomHat> RegisteredHats = new();
@@ -261,7 +259,12 @@ internal static class CustomCosmeticsManager
         var hash = BitConverter.ToString(algorithm.ComputeHash(stream))
             .Replace("-", string.Empty)
             .ToLowerInvariant();
-        return !resHash.Equals(hash);
+        var result = !resHash.Equals(hash);
+        if (result)
+        {
+            Specimen.Instance.Log.LogMessage($"ResourceRequireDownload: {filePath} ({resHash} == {hash})");
+        }
+        return result;
     }
 
     private static bool HydrateHat(HatViewData viewData, CustomHat hat, string fileName)

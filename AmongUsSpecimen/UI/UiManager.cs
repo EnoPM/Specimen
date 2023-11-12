@@ -23,7 +23,7 @@ public static class UiManager
     private static OverlayWindow _overlay;
     internal static UiBehaviour Behaviour;
 
-    public static event Action Inizialized;
+    public static event Action Initialized;
     
     public static bool IsReady { get; private set; }
 
@@ -47,9 +47,8 @@ public static class UiManager
         UiCanvas = UiRoot.GetComponent<Canvas>();
         IsReady = true;
         _overlay = RegisterWindow<OverlayWindow>();
-        CustomCosmeticsManager.CosmeticsDownloadWindow = RegisterWindow<CosmeticsDownloadWindow>();
         Behaviour = Specimen.Instance.AddComponent<UiBehaviour>();
-        Inizialized?.Invoke();
+        Initialized?.Invoke();
     }
 
     private static void HandleUiLog(string message, LogType logType)

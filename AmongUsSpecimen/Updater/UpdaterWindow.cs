@@ -100,7 +100,7 @@ public class UpdaterWindow : UiWindow
         _releaseDescription = UiFactory.CreateLabel(content, "ReleaseDescription", string.Empty, TextAnchor.UpperLeft, fontSize: 18);
         UiFactory.SetLayoutElement(_releaseDescription.gameObject, MinWidth, flexibleWidth: 0, minHeight: 40, flexibleHeight: 0);
         
-        Header.SetText($"{Title} {UpdatedMod.Config.RepositoryOwner}/{UpdatedMod.Config.RepositoryName}");
+        Header.SetText($"{Title} {UpdatedMod.UpdaterConfig.RepositoryOwner}/{UpdatedMod.UpdaterConfig.RepositoryName}");
         
         RefreshDropdown(UpdatedMod.LatestRelease);
     }
@@ -119,7 +119,7 @@ public class UpdaterWindow : UiWindow
 
     private void OnDownloadButtonClick()
     {
-        if (_selectedRelease == null || !UpdatedMod.Config.CheckCompatibility(UpdatedMod.Config, _selectedRelease)) return;
+        if (_selectedRelease == null || !UpdatedMod.UpdaterConfig.CheckCompatibility(UpdatedMod.UpdaterConfig, _selectedRelease)) return;
         UiManager.Behaviour.StartCoroutine(UpdatedMod.CoDownloadRelease(_selectedRelease));
     }
 
@@ -131,13 +131,13 @@ public class UpdaterWindow : UiWindow
     private void RefreshSelectedRelease()
     {
         if (_selectedRelease == null) return;
-        var isCompatible = UpdatedMod.Config.CheckCompatibility(UpdatedMod.Config, _selectedRelease);
-        var isUpgrade = _selectedRelease.IsNewer(UpdatedMod.Config.VersionToCompare);
-        var isReinstall = !isUpgrade && _selectedRelease.Version == UpdatedMod.Config.VersionToCompare;
+        var isCompatible = UpdatedMod.UpdaterConfig.CheckCompatibility(UpdatedMod.UpdaterConfig, _selectedRelease);
+        var isUpgrade = _selectedRelease.IsNewer(UpdatedMod.UpdaterConfig.VersionToCompare);
+        var isReinstall = !isUpgrade && _selectedRelease.Version == UpdatedMod.UpdaterConfig.VersionToCompare;
         var updateType = isUpgrade ? "Upgrade" : isReinstall ? "Reinstall" : "Downgrade";
         var updateTypeColor = isUpgrade ? Color.green : isReinstall ? UIPalette.Info : UIPalette.Warning;
         var updateTypeArrow = isUpgrade ? "\u25b2" : isReinstall ? "=" : "\u25bc";
-        _releaseName.text = $"{ColorHelpers.Colorize(updateTypeColor, updateType)}: {ColorHelpers.Colorize(Color.yellow, $"v{UpdatedMod.Config.VersionToCompare.ToString()}")} {ColorHelpers.Colorize(updateTypeColor, updateTypeArrow)} {_selectedRelease.Tag}";
+        _releaseName.text = $"{ColorHelpers.Colorize(updateTypeColor, updateType)}: {ColorHelpers.Colorize(Color.yellow, $"v{UpdatedMod.UpdaterConfig.VersionToCompare.ToString()}")} {ColorHelpers.Colorize(updateTypeColor, updateTypeArrow)} {_selectedRelease.Tag}";
         if (!isCompatible)
         {
             _releaseDescription.text = _selectedRelease.Description;
@@ -146,7 +146,7 @@ public class UpdaterWindow : UiWindow
         }
         else if (isUpgrade)
         {
-            var releases = _githubReleases.Values.Where(r => r.IsNewer(UpdatedMod.Config.VersionToCompare) && !r.IsNewer(_selectedRelease.Version));
+            var releases = _githubReleases.Values.Where(r => r.IsNewer(UpdatedMod.UpdaterConfig.VersionToCompare) && !r.IsNewer(_selectedRelease.Version));
             _releaseDescription.text = string.Join("\n", releases.Select(r => r.Description));
             _downloadButton.Component.SetColorsAuto(UIPalette.Success);
             _downloadButton.ButtonText.text = $"Install {_selectedRelease.Name}";
@@ -176,10 +176,11 @@ public class UpdaterWindow : UiWindow
         {
             foreach (var release in UpdatedMod.Releases)
             {
+                if (release.Assets.All(x => !UpdatedMod.UpdaterConfig.FilesToUpdate.Contains(x.Name))) continue;
                 var isLatest = latestRelease?.Id == release.Id;
-                var isCompatible = UpdatedMod.Config.CheckCompatibility(UpdatedMod.Config, release);
-                var isCurrent = release.Version == UpdatedMod.Config.VersionToCompare;
-                var isNewer = release.IsNewer(UpdatedMod.Config.VersionToCompare);
+                var isCompatible = UpdatedMod.UpdaterConfig.CheckCompatibility(UpdatedMod.UpdaterConfig, release);
+                var isCurrent = release.Version == UpdatedMod.UpdaterConfig.VersionToCompare;
+                var isNewer = release.IsNewer(UpdatedMod.UpdaterConfig.VersionToCompare);
                 var color = isCurrent ? UIPalette.Info : !isCompatible ? Color.red : isNewer ? Color.green : UIPalette.Warning;
                 var text = release.Tag;
                 if (isCurrent)

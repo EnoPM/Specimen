@@ -1,4 +1,5 @@
 ﻿using System;
+using AmongUsSpecimen.Utils;
 
 namespace AmongUsSpecimen.Cosmetics;
 
@@ -10,11 +11,7 @@ public class CustomCosmeticsAttribute : Attribute
 
     public CustomCosmeticsAttribute(string repository, string manifestFileName)
     {
-        if (!repository.Contains('/'))
-        {
-            throw new Exception($"Wrong repository format. Accepted format: owner/repository");
-        }
-
+        AttributeHelpers.CheckRepositorySyntax(repository);
         Repository = repository;
         ManifestFileName = manifestFileName;
     }

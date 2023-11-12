@@ -54,6 +54,14 @@ public static class AttributeHelpers
         return results;
     }
 
+    internal static void CheckRepositorySyntax(string repository)
+    {
+        if (!repository.Contains('/'))
+        {
+            throw new Exception($"Wrong repository format ({repository}). Accepted format: owner/repository");
+        }
+    }
+
     public class AttributeClassResult<T> where T : Attribute
     {
         public T Attribute;

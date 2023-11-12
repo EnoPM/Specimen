@@ -5,7 +5,7 @@
         <PackageId>AmongUs.Specimen</PackageId>
         <AssemblyName>AmongUsSpecimen</AssemblyName>
         <Description>Among Us BepinEx plugin updater</Description>
-        <Version>0.0.1</Version>
+        <Version>0.0.2</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>latest</LangVersion>
         <RestoreAdditionalProjectSources>
@@ -17,6 +17,8 @@
         <Authors>EnoPM</Authors>
         <PackageDescription>Among Us BepinEx modding framework</PackageDescription>
         <RepositoryUrl>https://github.com/EnoPM/Specimen</RepositoryUrl>
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>embedded</DebugType>
     </PropertyGroup>
 
     <ItemGroup>
@@ -37,14 +39,17 @@
     <ItemGroup>
       <EmbeddedResource Include="Resources\Library\UniverseLib.IL2CPP.dll" />
     </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Options\" />
+    </ItemGroup>
 
     <Target Name="CopyPlugins" AfterTargets="AfterBuild">
-        <Copy SourceFiles="$(TargetPath)" DestinationFolder="C:\Program Files (x86)\Steam\steamapps\common\Among Us\BepInEx\plugins\Specimen" />
+        <Copy SourceFiles="$(TargetPath)" DestinationFolder="C:\Program Files (x86)\Steam\steamapps\common\Among Us\BepInEx\plugins" />
     </Target>
     <Target Name="CopyPluginsToBetterOtherRolesLibs" AfterTargets="AfterBuild">
         <Copy SourceFiles="$(TargetPath)" DestinationFolder="C:\Users\Utilisateur\RiderProjects\BetterOtherRoles-v2\BetterOtherRoles\libs" />
     </Target>
     <Target Name="CopyPluginsToBetterOtherRolesGameFolder" AfterTargets="AfterBuild">
-        <Copy SourceFiles="$(TargetPath)" DestinationFolder="C:\Program Files (x86)\Steam\steamapps\common\Among Us - BetterOtherRoles2\BepInEx\plugins\Specimen" />
+        <Copy SourceFiles="$(TargetPath)" DestinationFolder="C:\Program Files (x86)\Steam\steamapps\common\Among Us - BetterOtherRoles2\BepInEx\plugins" />
     </Target>
 </Project>

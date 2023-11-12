@@ -15,6 +15,12 @@ internal class UiBehaviour : MonoBehaviour
 
     private void Update()
     {
+        CheckAndUpdateScreenSize();
+        NotificationManager.UiUpdate();
+    }
+
+    private void CheckAndUpdateScreenSize()
+    {
         var height = Screen.height;
         var width = Screen.width;
         if (height == _cachedHeight && width == _cachedWidth) return;

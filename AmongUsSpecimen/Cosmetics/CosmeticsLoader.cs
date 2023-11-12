@@ -3,6 +3,8 @@ using System.IO;
 using System.Text.Json;
 using BepInEx.Unity.IL2CPP.Utils;
 using System.Collections;
+using AmongUsSpecimen.UI;
+using AmongUsSpecimen.UI.Components;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -55,11 +57,11 @@ public class CosmeticsLoader : MonoBehaviour
 
     private static IEnumerator CoDownloadHats(ManifestFile response, string repository)
     {
-        while (CustomCosmeticsManager.CosmeticsDownloadWindow == null)
+        while (NotificationManager.Window == null)
         {
             yield return new WaitForEndOfFrame();
         }
-        var window = CustomCosmeticsManager.CosmeticsDownloadWindow;
+        
         var hatsDirectory = CustomCosmeticsManager.HatsDirectory;
         if (!Directory.Exists(hatsDirectory)) Directory.CreateDirectory(hatsDirectory);
         CustomCosmeticsManager.UnregisteredHats.AddRange(CustomCosmeticsManager.SanitizeHats(response));
@@ -67,12 +69,15 @@ public class CosmeticsLoader : MonoBehaviour
         Specimen.Instance.Log.LogMessage($"{toDownload.Count} hat asset files to download");
         if (toDownload.Count > 0)
         {
-            window.SetActive(true);
-            window.InitProgression(totalFileCount, totalFileCount - toDownload.Count);
+            var notification = NotificationManager.AddNotification(new DownloadListNotification(
+                totalFileCount,
+                totalFileCount - toDownload.Count,
+                "Custom cosmetics update"));
+            notification.UpdateProgression();
             foreach (var fileName in toDownload)
             {
-                window.NextAsset();
-                while (CustomCosmeticsManager.PauseDownloader)
+                notification.IncrementDownloadFile();
+                while (notification.PauseDownload)
                 {
                     yield return new WaitForEndOfFrame();
                 }
@@ -81,7 +86,7 @@ public class CosmeticsLoader : MonoBehaviour
             }
 
             yield return new WaitForSeconds(2f);
-            window.SetActive(false);
+            notification.Remove();
         }
         
     }

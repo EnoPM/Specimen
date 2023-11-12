@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using AmongUsSpecimen.Cosmetics;
+using AmongUsSpecimen.Updater;
 using BepInEx;
 using BepInEx.Unity.IL2CPP;
 
@@ -56,13 +57,5 @@ internal static class AssemblyExtensions
         var result = Assembly.Load(data);
         System.Console.WriteLine($"Loaded embedded {libraryName}.dll: {result.ManifestModule.ModuleVersionId}");
         return result;
-    }
-
-    internal static void InitSpecimen(this Assembly assembly)
-    {
-        CustomRegionsManager.RegisterAssembly(assembly);
-        RpcManager.RegisterAssembly(assembly);
-        CustomCosmeticsManager.RegisterAssembly(assembly);
-        RegisterInIl2CppAttribute.RegisterAssembly(assembly);
     }
 }

@@ -19,14 +19,14 @@ public class AutoUpdatedMod
     internal static readonly List<AutoUpdatedMod> AutoUpdatedMods = new();
     public bool HasUpdateAvailable => LatestRelease != null;
     
-    public readonly UpdateModConfig Config;
+    public readonly ModUpdaterConfig UpdaterConfig;
     private UpdaterWindow _window;
     public List<GithubRelease> Releases;
     public GithubRelease LatestRelease { get; private set; }
 
-    public AutoUpdatedMod(UpdateModConfig config)
+    public AutoUpdatedMod(ModUpdaterConfig updaterConfig)
     {
-        Config = config;
+        UpdaterConfig = updaterConfig;
         AutoUpdatedMods.Add(this);
     }
 
@@ -49,7 +49,7 @@ public class AutoUpdatedMod
     {
         var www = MakeWebRequest(
             UnityWebRequest.UnityWebRequestMethod.Get,
-            $"https://api.github.com/repos/{Config.RepositoryOwner}/{Config.RepositoryName}/releases");
+            $"https://api.github.com/repos/{UpdaterConfig.RepositoryOwner}/{UpdaterConfig.RepositoryName}/releases");
         var operation = www.SendWebRequest();
         while (!operation.isDone)
         {
@@ -67,7 +67,7 @@ public class AutoUpdatedMod
         www.Dispose();
         Releases.Sort(CompareReleases);
         var latestRelease = Releases.FirstOrDefault();
-        if (latestRelease != null && latestRelease.Version != Config.VersionToCompare)
+        if (latestRelease != null && latestRelease.Version != UpdaterConfig.VersionToCompare && latestRelease.Assets.Any(x => UpdaterConfig.FilesToUpdate.Contains(x.Name)))
         {
             NewUpdateAvailable(latestRelease);
         }
@@ -86,7 +86,7 @@ public class AutoUpdatedMod
     
     private IEnumerator CoDownloadAsset(GithubAsset asset)
     {
-        var dirPath = Path.Combine(Paths.PluginPath, Config.Directory);
+        var dirPath = Path.Combine(Paths.PluginPath, UpdaterConfig.Directory);
         var www = MakeWebRequest(UnityWebRequest.UnityWebRequestMethod.Get, asset.DownloadUrl);
         var operation = www.SendWebRequest();
         
@@ -153,7 +153,7 @@ public class AutoUpdatedMod
 
     private void LoadReleasesError(string error)
     {
-        Specimen.Instance.Log.LogError($"[AutoUpdateMod] {Config.RepositoryOwner}/{Config.RepositoryName}: {error}");
+        Specimen.Instance.Log.LogError($"[AutoUpdateMod] {UpdaterConfig.RepositoryOwner}/{UpdaterConfig.RepositoryName}: {error}");
     }
 
     private void NewUpdateAvailable(GithubRelease release)
@@ -174,7 +174,7 @@ public class AutoUpdatedMod
     
     private void DownloadAssetError(GithubAsset asset, string error)
     {
-        Specimen.Instance.Log.LogError($"[AutoUpdateMod]DownloadAssetError {Config.RepositoryOwner}/{Config.RepositoryName}: {error}");
+        Specimen.Instance.Log.LogError($"[AutoUpdateMod]DownloadAssetError {UpdaterConfig.RepositoryOwner}/{UpdaterConfig.RepositoryName}: {error}");
         _window.SetProgressInfosText(ColorHelpers.Colorize(Color.red, $"Error in {asset.Name} download:\n {error}"));
     }
     
@@ -191,7 +191,7 @@ public class AutoUpdatedMod
     
     private void CopyAssetError(GithubAsset asset, string error)
     {
-        Specimen.Instance.Log.LogError($"[AutoUpdateMod]CopyAssetError {Config.RepositoryOwner}/{Config.RepositoryName}: {error}");
+        Specimen.Instance.Log.LogError($"[AutoUpdateMod]CopyAssetError {UpdaterConfig.RepositoryOwner}/{UpdaterConfig.RepositoryName}: {error}");
         _window.SetProgressInfosText(ColorHelpers.Colorize(Color.red, $"Error in {asset.Name} update:\n {error}"));
     }
     
@@ -202,7 +202,7 @@ public class AutoUpdatedMod
     
     private bool IsUpdateAsset(GithubAsset asset)
     {
-        return Config.FilesToUpdate.Any(x => Regex.IsMatch(asset.Name, x));
+        return UpdaterConfig.FilesToUpdate.Any(x => Regex.IsMatch(asset.Name, x));
     }
     
     private static int CompareReleases(GithubRelease a, GithubRelease b)
