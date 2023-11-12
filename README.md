@@ -99,7 +99,7 @@ public class DemoPlugin : BasePlugin
 }
 ```
 
-### Custom Rpc
+### Custom RPCs
 ```csharp
 using BepInEx;
 using BepInEx.Unity.IL2CPP;
