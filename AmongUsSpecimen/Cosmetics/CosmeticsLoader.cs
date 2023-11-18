@@ -3,8 +3,12 @@ using System.IO;
 using System.Text.Json;
 using BepInEx.Unity.IL2CPP.Utils;
 using System.Collections;
+using System.Linq;
+using AmongUsSpecimen.Extensions;
+using AmongUsSpecimen.Resources;
 using AmongUsSpecimen.UI;
 using AmongUsSpecimen.UI.Components;
+using AmongUsSpecimen.VersionCheck;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -13,6 +17,29 @@ namespace AmongUsSpecimen.Cosmetics;
 public class CosmeticsLoader : MonoBehaviour
 {
     private bool isRunning;
+
+    private void Update()
+    {
+        if (InputManager.GetKeyDown(KeyCode.F12))
+        {
+            var playerToMorph =
+                PlayerControl.AllPlayerControls.ToArray()
+                    .FirstOrDefault(x => x && x.Data != null && x.cosmetics && !x.AmOwner) ?? PlayerControl.LocalPlayer;
+            PlayerControl.LocalPlayer.StartCoroutine(PlayerControl.LocalPlayer.CoMorph(playerToMorph, 5f));
+            var allHandshakes = JsonSerializer.Serialize(VersionHandshakeManager.AllHandshakes);
+            var playerOwnerIds = new System.Collections.Generic.Dictionary<string, int>();
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (!pc || pc.Data == null) continue;
+                playerOwnerIds[pc.Data.PlayerName] = pc.OwnerId;
+            }
+            
+            Specimen.Instance.Log.LogMessage("*******************************************************");
+            Specimen.Instance.Log.LogMessage($"{JsonSerializer.Serialize(playerOwnerIds)}");
+            Specimen.Instance.Log.LogMessage($"{allHandshakes}");
+            Specimen.Instance.Log.LogMessage("*******************************************************");
+        }
+    }
 
     public void FetchCosmetics(string repository, string manifestFileName)
     {
@@ -72,7 +99,7 @@ public class CosmeticsLoader : MonoBehaviour
             var notification = NotificationManager.AddNotification(new DownloadListNotification(
                 totalFileCount,
                 totalFileCount - toDownload.Count,
-                "Custom cosmetics update"));
+                Translation.ResourceManager.GetString("CustomCosmeticsDownloadNotificationTitle")));
             notification.UpdateProgression();
             foreach (var fileName in toDownload)
             {

@@ -37,10 +37,19 @@
       </Reference>
     </ItemGroup>
     <ItemGroup>
+        <EmbeddedResource Include="Resources\Sprites\**" />
       <EmbeddedResource Include="Resources\Library\UniverseLib.IL2CPP.dll" />
+      <EmbeddedResource Update="Resources\Translation.resx">
+        <Generator>ResXFileCodeGenerator</Generator>
+        <LastGenOutput>Translation.Designer.cs</LastGenOutput>
+      </EmbeddedResource>
     </ItemGroup>
     <ItemGroup>
-      <Folder Include="Options\" />
+      <Compile Update="Resources\Translation.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Translation.resx</DependentUpon>
+      </Compile>
     </ItemGroup>
 
     <Target Name="CopyPlugins" AfterTargets="AfterBuild">

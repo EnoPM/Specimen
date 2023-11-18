@@ -15,10 +15,10 @@ internal static class AssemblyExtensions
         where TAttribute : Attribute
     {
         var results = new List<AttributeHelpers.AttributeMethodResult<TAttribute>>();
-        var allClasses = assembly.GetExportedTypes().Where(x => x.IsClass);
+        var allClasses = assembly.GetTypes().Where(x => x.IsClass);
         foreach (var type in allClasses)
         {
-            var allMethods = type.GetMethods().Where(x => x.GetCustomAttributes<TAttribute>().ToArray().Length > 0);
+            var allMethods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance).Where(x => x.GetCustomAttributes<TAttribute>().ToArray().Length > 0);
             foreach (var method in allMethods)
             {
                 var attributes = method.GetCustomAttributes<TAttribute>();

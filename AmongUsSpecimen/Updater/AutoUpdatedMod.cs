@@ -66,7 +66,7 @@ public class AutoUpdatedMod
         www.downloadHandler.Dispose();
         www.Dispose();
         Releases.Sort(CompareReleases);
-        var latestRelease = Releases.FirstOrDefault();
+        var latestRelease = Releases.FirstOrDefault(IsValidRelease);
         if (latestRelease != null && latestRelease.Version != UpdaterConfig.VersionToCompare && latestRelease.Assets.Any(x => UpdaterConfig.FilesToUpdate.Contains(x.Name)))
         {
             NewUpdateAvailable(latestRelease);
@@ -217,5 +217,10 @@ public class AutoUpdatedMod
         www.SetUrl(url);
         www.downloadHandler = new DownloadHandlerBuffer();
         return www;
+    }
+
+    internal bool IsValidRelease(GithubRelease release)
+    {
+        return release.Assets.Any(x => UpdaterConfig.FilesToUpdate.Contains(x.Name));
     }
 }

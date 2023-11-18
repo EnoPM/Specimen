@@ -1,4 +1,5 @@
-﻿using AmongUsSpecimen.UI.Extensions;
+﻿using AmongUsSpecimen.Resources;
+using AmongUsSpecimen.UI.Extensions;
 using UnityEngine;
 using UnityEngine.UI;
 using UniverseLib.UI;
@@ -79,7 +80,7 @@ public sealed class DownloadListNotification : Notification
     public void UpdateProgression()
     {
         ProgressBar.SetProgression(_downloadFileCount, _fileCount);
-        _button.ButtonText.text = $"{(PauseDownload ? "Resume download" : "Pause download")} [{_downloadFileCount}/{_fileCount}]";
+        _button.ButtonText.text = $"{(PauseDownload ? Translation.CustomCosmeticsResumeDownload : Translation.CustomCosmeticsPauseDownload)} [{_downloadFileCount}/{_fileCount}]";
         var color = PauseDownload ? UIPalette.Warning * 1.5f : UIPalette.Success * 1.5f;
         ProgressBar.SetContainerColor(color * 0.5f);
         ProgressBar.SetBarColor(color);
@@ -89,12 +90,12 @@ public sealed class DownloadListNotification : Notification
         }
         if (PauseDownload)
         {
-            _description.SetText($"{_fileCount - _downloadFileCount} files remaining (paused).");
+            _description.SetText($"{_fileCount - _downloadFileCount} {Translation.CustomCosmeticsFilesRemaining} ({Translation.CustomCosmeticsPaused}).");
             _description.Point = string.Empty;
         }
         else
         {
-            _description.SetText($"{_fileCount - _downloadFileCount} files remaining");
+            _description.SetText($"{_fileCount - _downloadFileCount} {Translation.CustomCosmeticsFilesRemaining}");
             _description.Point = ".";
         }
     }

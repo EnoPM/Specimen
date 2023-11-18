@@ -31,6 +31,8 @@ public abstract class UiWindow : PanelBase
     public override Vector2 DefaultAnchorMin => Vector2.zero;
     public override Vector2 DefaultAnchorMax => Vector2.zero;
     public override bool CanDragAndResize => false;
+
+    internal virtual bool IsPartOfSpecimenHud => false; 
     
     public override void ConstructUI()
     {

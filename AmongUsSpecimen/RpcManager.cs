@@ -18,18 +18,29 @@ public static class RpcManager
 {
     internal const byte ReservedRpcCallId = 249;
     private const string SenderParameterName = "__sender";
+    private const string ReceiverParameterName = "__receiver";
     private static readonly Type SenderParameterType = typeof(PlayerControl);
-    
+    private static readonly Type ReceiverParameterType = typeof(PlayerControl);
+
     private static ManualLogSource LogSource => Specimen.Instance.Log;
     private static Harmony Harmony => Specimen.Harmony;
-    
+
     private static readonly Dictionary<string, RegisteredRpc> AllRpc = new();
     private static void LogMessage(string message) => LogSource.LogMessage($"[{nameof(RpcManager)}] {message}");
     private static void LogDebug(string message) => LogSource.LogDebug($"[{nameof(RpcManager)}] {message}");
     private static void LogWarning(string message) => LogSource.LogWarning($"[{nameof(RpcManager)}] {message}");
     private static void LogError(string message) => LogSource.LogError($"[{nameof(RpcManager)}] {message}");
 
-    private static readonly JsonSerializerOptions SerializerOptions = new() { Converters = { new UnityColorConverter(), new PlayerControlConverter() }};
+    private static readonly JsonSerializerOptions SerializerOptions = new()
+    {
+        Converters =
+        {
+            new UnityColorConverter(),
+            new PlayerControlConverter(),
+            new SystemGuidConverter(),
+            new SystemVersionConverter()
+        }
+    };
 
     public static void RegisterAssembly(Assembly assembly)
     {
@@ -82,7 +93,8 @@ public static class RpcManager
         var prefix = new HarmonyMethod(AccessTools.Method(typeof(Patches), nameof(Patches.DynamicPrefix)));
         var declaringType = methodResult.Method.DeclaringType;
         LogDebug($"Trying to register rpc method of type {declaringType?.FullName}");
-        var invoker = new MethodInvoker(original, methodResult.Method.IsStatic ? null : Singletons.Get(methodResult.Declaring));
+        var invoker = new MethodInvoker(original,
+            methodResult.Method.IsStatic ? null : Singletons.Get(methodResult.Declaring));
         Harmony.Patch(methodResult.Method, prefix);
         AllRpc[id] = new RegisteredRpc(methodResult.Method, methodResult.Attribute, invoker);
         LogDebug($"Registered rpc for method {id}");
@@ -105,20 +117,31 @@ public static class RpcManager
         var data = new List<string>();
 
         var parameters = rpc.OriginalMethod.GetParameters().ToList();
-        var localParameterIndexes = new List<int> { parameters.FindIndex(IsSenderParameter) };
+        
+        var senderParameterIndex = parameters.FindIndex(IsSenderParameter);
+        var receiverParameterIndex = parameters.FindIndex(IsReceiverParameter);
+        
         var sender = PlayerControl.LocalPlayer;
+        var receiverId = -1;
 
         for (var i = 0; i < args.Length; i++)
         {
-            if (localParameterIndexes.Contains(i))
+            if (i == senderParameterIndex)
             {
                 sender = (PlayerControl)args[i];
                 continue;
             }
+
+            if (i == receiverParameterIndex)
+            {
+                receiverId = ((PlayerControl)args[i]).OwnerId;
+                continue;
+            }
+
             data.Add(JsonSerializer.Serialize(args[i]));
         }
 
-        new RpcData { Id = id, Data = data }.Send(sender);
+        new RpcData { Id = id, Data = data }.Send(sender, receiverId);
     }
 
     internal static void HandleRpc(PlayerControl sender, MessageReader reader)
@@ -135,6 +158,7 @@ public static class RpcManager
             LogWarning($"HandleRpc: AmOwner of rpc call {data.Id}");
             if (rpc.Attribute.Execution != LocalExecution.None) return;
         }
+
         var parameters = rpc.OriginalMethod.GetParameters();
         var args = new List<object>();
         if (!rpc.OriginalMethod.IsStatic)
@@ -149,17 +173,25 @@ public static class RpcManager
             {
                 args.Add(sender);
             }
+            else if (IsReceiverParameter(p))
+            {
+                args.Add(PlayerControl.LocalPlayer);
+            }
             else
             {
                 index++;
                 try
                 {
-                    var deserializerMethod = typeof(JsonSerializer).GetMethods().FirstOrDefault(x => x.Name == nameof(JsonSerializer.Deserialize) && x.ContainsGenericParameters && x.GetParameters().Length == 2 && x.GetParameters()[0].ParameterType == typeof(string) && x.GetParameters()[1].ParameterType == typeof(JsonSerializerOptions));
+                    var deserializerMethod = typeof(JsonSerializer).GetMethods().FirstOrDefault(x =>
+                        x.Name == nameof(JsonSerializer.Deserialize) && x.ContainsGenericParameters &&
+                        x.GetParameters().Length == 2 && x.GetParameters()[0].ParameterType == typeof(string) &&
+                        x.GetParameters()[1].ParameterType == typeof(JsonSerializerOptions));
                     if (deserializerMethod == null)
                     {
                         LogError($"deserializerMethod not found");
                         return;
                     }
+
                     var deserialized = deserializerMethod.MakeGenericMethod(p.ParameterType)
                         .Invoke(null, new object[] { data.Data[index], SerializerOptions });
                     if (deserialized == null)
@@ -168,6 +200,7 @@ public static class RpcManager
                         args.Add(null);
                         return;
                     }
+
                     args.Add(deserialized);
                 }
                 catch (Exception exception)
@@ -192,6 +225,12 @@ public static class RpcManager
     {
         if (parameter.Name != SenderParameterName) return false;
         return parameter.ParameterType == SenderParameterType;
+    }
+    
+    private static bool IsReceiverParameter(ParameterInfo parameter)
+    {
+        if (parameter.Name != ReceiverParameterName) return false;
+        return parameter.ParameterType == ReceiverParameterType;
     }
 }
 
@@ -227,11 +266,12 @@ internal class RpcData
 
     [JsonPropertyName("data")] public List<string> Data { get; set; }
 
-    internal void Send(PlayerControl sender = null)
+    internal void Send(PlayerControl sender = null, int receiverId = -1)
     {
+        if (!AmongUsClient.Instance || !PlayerControl.LocalPlayer) return;
         sender = sender ? sender : PlayerControl.LocalPlayer;
         var writer = AmongUsClient.Instance.StartRpcImmediately(sender.NetId,
-            RpcManager.ReservedRpcCallId, SendOption.Reliable);
+            RpcManager.ReservedRpcCallId, SendOption.Reliable, receiverId);
         writer.Write(Serialize());
         AmongUsClient.Instance.FinishRpcImmediately(writer);
     }

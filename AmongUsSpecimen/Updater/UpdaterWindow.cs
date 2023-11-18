@@ -25,7 +25,7 @@ public class UpdaterWindow : UiWindow
 
     public override string Name => "Specimen Updater";
     public override bool HasOverlay => true;
-    protected override bool DisplayByDefault => true;
+    protected override bool DisplayByDefault => false;
     public override bool AlwaysOnTop => true;
     protected override string Title => $"<b><color=#5925b3>Specimen</color> Updater:</b>";
     public override int MinWidth => 600;
