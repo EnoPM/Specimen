@@ -1,5 +1,5 @@
 ﻿using HarmonyLib;
-using static AmongUsSpecimen.Options.CustomOptionManager;
+using static AmongUsSpecimen.ModOptions.ModOptionUtility;
 
 namespace AmongUsSpecimen.Patches;
 

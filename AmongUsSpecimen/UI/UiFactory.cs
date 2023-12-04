@@ -229,7 +229,8 @@ public static class UiFactory
         Color color = default,
         int? minWidth = null,
         int? minHeight = null,
-        int spacing = 5
+        int spacing = 5,
+        TextAnchor contentAlignment = TextAnchor.MiddleCenter
     )
     {
         var uiObject1 = CreateUIObject(name, parent);
@@ -259,8 +260,8 @@ public static class UiFactory
         uiObject2.AddComponent<Mask>().showMaskGraphic = false;
         content = CreateUIObject("Content", uiObject2);
         var gameObject2 = content;
-        SetLayoutGroup<VerticalLayoutGroup>(gameObject2, true, false, true, true, spacing, 30, null, 10, null,
-            TextAnchor.MiddleLeft);
+        SetLayoutGroup<VerticalLayoutGroup>(gameObject2, true, false, true, true, spacing, 30, 30, 10, null,
+            contentAlignment);
         var gameObject3 = content;
         SetLayoutElement(gameObject3, minWidth, minHeight);
         var component3 = content.GetComponent<RectTransform>();

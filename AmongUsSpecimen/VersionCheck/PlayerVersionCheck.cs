@@ -48,7 +48,7 @@ internal class PlayerVersionCheck
         var main = UiFactory.CreateHorizontalGroup(master, "PlayerVersionCheckMain", false, false, true, true, 
             5, Vector4.zero, Palette.EnabledColor, TextAnchor.MiddleCenter);
         _background = main.GetComponent<Image>();
-        UiFactory.SetLayoutElement(main, Width, Height, 0, 0);
+        UiFactory.SetLayoutElement(main, Width, Height, 0, 0, 0, 0);
         
         _modsContainer = UiFactory.CreateVerticalGroup(master, "ModsContainer",
         false, false, true, true, 0,

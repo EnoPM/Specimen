@@ -7,7 +7,7 @@ using Il2CppInterop.Runtime.Injection;
 namespace AmongUsSpecimen.Utils;
 
 [AttributeUsage(AttributeTargets.Class)]
-internal sealed class RegisterInIl2CppAttribute : Attribute
+internal sealed class RegisterMonoBehaviourAttribute : Attribute
 {
     private static readonly HashSet<Assembly> RegisteredAssemblies = new();
 
@@ -17,25 +17,25 @@ internal sealed class RegisterInIl2CppAttribute : Attribute
     private Type[] Interfaces { get; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="RegisterInIl2CppAttribute"/> class without any interfaces.
+    /// Initializes a new instance of the <see cref="RegisterMonoBehaviourAttribute"/> class without any interfaces.
     /// </summary>
-    public RegisterInIl2CppAttribute()
+    public RegisterMonoBehaviourAttribute()
     {
         Interfaces = Type.EmptyTypes;
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="RegisterInIl2CppAttribute"/> class with interfaces.
+    /// Initializes a new instance of the <see cref="RegisterMonoBehaviourAttribute"/> class with interfaces.
     /// </summary>
     /// <param name="interfaces">Il2Cpp interfaces to be injected with this type.</param>
-    public RegisterInIl2CppAttribute(params Type[] interfaces)
+    public RegisterMonoBehaviourAttribute(params Type[] interfaces)
     {
         Interfaces = interfaces;
     }
 
     public static void RegisterType(Type type, Type[] interfaces)
     {
-        var baseTypeAttribute = type.BaseType?.GetCustomAttribute<RegisterInIl2CppAttribute>();
+        var baseTypeAttribute = type.BaseType?.GetCustomAttribute<RegisterMonoBehaviourAttribute>();
         if (baseTypeAttribute != null)
         {
             RegisterType(type.BaseType!, baseTypeAttribute.Interfaces);
@@ -57,7 +57,7 @@ internal sealed class RegisterInIl2CppAttribute : Attribute
     }
 
     /// <summary>
-    /// Registers all Il2Cpp types annotated with <see cref="RegisterInIl2CppAttribute"/> in the specified <paramref name="assembly"/>.
+    /// Registers all Il2Cpp types annotated with <see cref="RegisterMonoBehaviourAttribute"/> in the specified <paramref name="assembly"/>.
     /// </summary>
     /// <remarks>This is called automatically on plugin assemblies so you probably don't need to call this.</remarks>
     /// <param name="assembly">The assembly to search.</param>
@@ -65,7 +65,7 @@ internal sealed class RegisterInIl2CppAttribute : Attribute
     {
         if (RegisteredAssemblies.Contains(assembly)) return;
         RegisteredAssemblies.Add(assembly);
-        var types = assembly.GetClassesByAttribute<RegisterInIl2CppAttribute>();
+        var types = assembly.GetClassesByAttribute<RegisterMonoBehaviourAttribute>();
 
         foreach (var type in types)
         {

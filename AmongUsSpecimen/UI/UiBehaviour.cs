@@ -27,7 +27,6 @@ internal class UiBehaviour : MonoBehaviour
         CheckUpdatedLocalClientId();
         CheckUpdatedLocalOwnerId();
         NotificationManager.UiUpdate();
-        VersionHandshakeManager.UiUpdate();
     }
 
     private void CheckAndUpdateScreenSize()

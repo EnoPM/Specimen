@@ -21,4 +21,7 @@ public static class GameEventManager
     
     public static event Action<PlayerControl> PlayerLeft;
     internal static void TriggerPlayerLeft(PlayerControl player) => PlayerLeft?.Invoke(player);
+
+    public static event Action HostChanged;
+    internal static void TriggerHostChanged() => HostChanged?.Invoke();
 }

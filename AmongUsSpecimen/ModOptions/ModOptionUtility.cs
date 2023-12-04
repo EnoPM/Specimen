@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
-using Object = Il2CppSystem.Object;
+using UnityEngine.Events;
 
-namespace AmongUsSpecimen.Options;
+namespace AmongUsSpecimen.ModOptions;
 
-public static class CustomOptionManager
+public static class ModOptionUtility
 {
     public const float MinCommonTaskCount = 0f;
     public const float MaxCommonTaskCount = 4f;
@@ -16,24 +16,26 @@ public static class CustomOptionManager
     public const float MinLongTaskCount = 0f;
     public const float MaxLongTaskCount = 15f;
 
-    internal static readonly List<CustomOptionTab> Tabs = new();
-    internal static readonly List<CustomOption> Options = new();
+    internal static List<ModOptionTab> Tabs => ModOptionManager.Tabs;
+    internal static List<BaseModOption> Options => ModOptionManager.Options;
 
-    public static readonly CustomOptionPreset OnlinePreset = new()
+    internal static readonly ModOptionPreset OnlinePreset = new()
     {
         IsSharable = true,
         Name = "Online",
         Values = new Dictionary<int, int>()
     };
 
-    private static CustomOptionPreset _currentPreset { get; set; } = new()
+    private static ModOptionPreset _currentPreset { get; set; } = new()
     {
         IsSharable = true,
         Name = "Default",
         Values = new Dictionary<int, int>()
     };
 
-    internal static CustomOptionPreset CurrentPreset
+    internal static ModOptionPreset RealCurrentPreset => _currentPreset;
+
+    internal static ModOptionPreset CurrentPreset
     {
         get
         {
@@ -57,8 +59,14 @@ public static class CustomOptionManager
         }
     }
 
+    internal static void ShareHostPreset()
+    {
+        if (!AmongUsClient.Instance || !AmongUsClient.Instance.AmHost) return;
+        RpcSetCurrentPreset(CurrentPreset);
+    }
+
     [Rpc]
-    public static void RpcSetCurrentPreset(CustomOptionPreset preset)
+    public static void RpcSetCurrentPreset(ModOptionPreset preset)
     {
         CurrentPreset = preset;
     }
@@ -69,7 +77,7 @@ public static class CustomOptionManager
         SetValue_Internal(key, value);
     }
 
-    internal static void RegisterOption(CustomOption option)
+    internal static void RegisterOption(BaseModOption option)
     {
         Options.Add(option);
         Options.Sort(CompareOption);
@@ -81,7 +89,7 @@ public static class CustomOptionManager
         {
             if (CurrentPreset.Values.TryGetValue(option.Id, out var value))
             {
-                option.SetCurrentSelection_Internal(value);
+                option.CurrentSelection = value;
             }
             else
             {
@@ -90,7 +98,7 @@ public static class CustomOptionManager
         }
     }
     
-    private static int CompareOption(CustomOption a, CustomOption b)
+    private static int CompareOption(BaseModOption a, BaseModOption b)
     {
         return string.Compare(a.Name, b.Name, StringComparison.InvariantCulture);
     }
@@ -100,21 +108,21 @@ public static class CustomOptionManager
         CurrentPreset.SetValue(k, v, !PlayerConditions.AmHostOrNotInGame());
     }
 
-    private static void SetValue(this CustomOptionPreset preset, int key, int value, bool updateCustomOption = false)
+    private static void SetValue(this ModOptionPreset preset, int key, int value, bool updateCustomOption = false)
     {
         preset.Values[key] = value;
         if (!updateCustomOption) return;
         var option = key >= 0 && key < Options.Count ? Options[key] : null;
         if (option == null)
         {
-            Specimen.Instance.Log.LogWarning($"[{nameof(CustomOptionManager)}] Trying to set value of non-existing custom option");
+            Specimen.Instance.Log.LogWarning($"[{nameof(ModOptionUtility)}] Trying to set value of non-existing custom option");
             return;
         }
         if (preset.Name != CurrentPreset.Name) return;
-        option.SetCurrentSelection_Internal(value);
+        option.CurrentSelection = value;
     }
 
-    private static bool TryGetOption(OptionBehaviour optionBehaviour, out CustomOption customOption)
+    private static bool TryGetOption(OptionBehaviour optionBehaviour, out BaseModOption customOption)
     {
         customOption = Options.Find(x => x.OptionBehaviour == optionBehaviour);
         if (customOption != null)
@@ -127,7 +135,7 @@ public static class CustomOptionManager
     internal static bool CustomOptionEnable(StringOption stringOption)
     {
         if (!TryGetOption(stringOption, out var option)) return true;
-        stringOption.TitleText.text = option.Name;
+        stringOption.TitleText.text = option.DisplayName;
         stringOption.Value = stringOption.oldValue = option.CurrentSelection;
         stringOption.ValueText.text = option.DisplayValue;
         return false;
@@ -136,7 +144,7 @@ public static class CustomOptionManager
     internal static bool CustomOptionEnable(ToggleOption boolOption)
     {
         if (!TryGetOption(boolOption, out var option)) return true;
-        boolOption.TitleText.text = option.Name;
+        boolOption.TitleText.text = option.DisplayName;
         boolOption.CheckMark.enabled = boolOption.oldValue = option.CurrentSelection > 0;
         return false;
     }
@@ -156,47 +164,89 @@ public static class CustomOptionManager
     }
     
     private static float _timer = 1f;
+    private const float BaseOptionsPerRow = 8f;
 
     internal static void CustomOptionMenuUpdate(GameOptionsMenu optionsMenu)
     {
         var gameSettingMenu = UnityEngine.Object.FindObjectsOfType<GameSettingMenu>().FirstOrDefault();
         if (gameSettingMenu != null && (gameSettingMenu.RegularGameSettings.active ||
                                         gameSettingMenu.RolesSettings.gameObject.active)) return;
-        optionsMenu.GetComponentInParent<Scroller>().ContentYBounds.max = -0.5F + optionsMenu.Children.Length * 0.55F;
-        _timer += Time.deltaTime;
-        if (_timer < 0.1f) return;
-        _timer = 0f;
-
-        foreach (var tab in Tabs)
-        {
-            var offset = 2.75f;
-            foreach (var option in Options.Where(x => x.Tab == tab))
-            {
-                if (option.OptionBehaviour == null || option.OptionBehaviour.gameObject == null) continue;
-                var enabled = true;
-                var parent = option.Parent;
-                while (parent != null && enabled)
-                {
-                    enabled = parent.CurrentSelection > 0;
-                    parent = parent.Parent;
-                }
-
-                option.OptionBehaviour.gameObject.SetActive(enabled);
-                if (!enabled) continue;
-                offset -= option.IsHeader ? 0.75f : 0.5f;
-                var transform = option.OptionBehaviour.transform;
-                var localPosition = transform.localPosition;
-                transform.localPosition = new Vector3(localPosition.x, offset, localPosition.z);
-            }
-            
-        }
+        var activeTab = ModOptionManager.Tabs.Find(x => x.SettingsGameObject && x.SettingsGameObject.active);
+        activeTab?.BehaviourUpdate(optionsMenu);
     }
 
     private static void EmptyAction(OptionBehaviour _)
     {
     }
+
+    internal static void DestroyCustomOptionTabs()
+    {
+        foreach (var tab in Tabs)
+        {
+            foreach (var option in tab.Options)
+            {
+                if (option.OptionBehaviour)
+                {
+                    UnityEngine.Object.Destroy(option.OptionBehaviour);
+                }
+
+                option.OptionBehaviour = null;
+            }
+            if (tab.TabPositionObject)
+            {
+                UnityEngine.Object.Destroy(tab.TabPositionObject);
+            }
+
+            if (tab.TabObject)
+            {
+                UnityEngine.Object.Destroy(tab.TabObject);
+            }
+
+            if (tab.SettingsGameObject)
+            {
+                UnityEngine.Object.Destroy(tab.SettingsGameObject);
+            }
+
+            if (tab.Highlight && tab.Highlight.gameObject)
+            {
+                UnityEngine.Object.Destroy(tab.Highlight.gameObject);
+            }
+
+            if (tab.TitleTMP && tab.TitleTMP.gameObject)
+            {
+                UnityEngine.Object.Destroy(tab.TitleTMP.gameObject);
+            }
+
+            tab.TabPositionObject = null;
+            tab.TabObject = null;
+            tab.SettingsGameObject = null;
+            tab.Highlight = null;
+            tab.TitleTMP = null;
+        }
+
+        var gameTab = GameObject.Find("GameTab");
+        if (!gameTab) return;
+        var button = gameTab.GetComponentInChildren<PassiveButton>();
+        if (!button) return;
+        button.OnClick.Invoke();
+    }
     
-    internal static void CreateCustomOptionTabs(GameOptionsMenu gameOptionsMenu)
+    private class DefaultGameObjectPositions
+    {
+        internal Vector3 RoleTab;
+        internal Vector3 LocalRoleTab;
+        internal Vector3 GameTab;
+        internal Vector3 LocalGameTab;
+    }
+
+    private static DefaultGameObjectPositions _positionsCache;
+
+    private static Vector3 Clone(this Vector3 vector)
+    {
+        return new Vector3(vector.x, vector.y, vector.z);
+    }
+    
+    internal static void CreateCustomOptionTabs()
     {
         if (TryRefreshNames()) return;
         var stringTemplate = UnityEngine.Object.FindObjectsOfType<StringOption>().FirstOrDefault();
@@ -204,6 +254,7 @@ public static class CustomOptionManager
         if (stringTemplate == null || boolTemplate == null) return;
 
         var gameSettings = GameObject.Find("Game Settings");
+        if (!gameSettings) return;
         var gameSettingMenu = UnityEngine.Object.FindObjectsOfType<GameSettingMenu>().FirstOrDefault();
         if (gameSettingMenu == null) return;
         
@@ -214,10 +265,29 @@ public static class CustomOptionManager
         
         var roleTab = GameObject.Find("RoleTab");
         var gameTab = GameObject.Find("GameTab");
-        
-        for (var index = 0; index < Tabs.Count; index++)
+        if (_positionsCache == null)
         {
-            var tabInfo = Tabs[index];
+            _positionsCache = new DefaultGameObjectPositions
+            {
+                RoleTab = roleTab.transform.position.Clone(),
+                LocalRoleTab = roleTab.transform.localPosition.Clone(),
+                GameTab = gameTab.transform.position.Clone(),
+                LocalGameTab = gameTab.transform.localPosition.Clone()
+            };
+        }
+        else
+        {
+            roleTab.transform.position = _positionsCache.RoleTab.Clone();
+            roleTab.transform.localPosition = _positionsCache.LocalRoleTab.Clone();
+            gameTab.transform.position = _positionsCache.GameTab.Clone();
+            gameTab.transform.localPosition = _positionsCache.LocalGameTab.Clone();
+        }
+
+        var tabsToCreate = Tabs.Where(x => x.IsActive).ToList();
+        
+        for (var index = 0; index < tabsToCreate.Count; index++)
+        {
+            var tabInfo = tabsToCreate[index];
             GameObject setting;
             GameObject tab;
             if (index == 0)
@@ -227,23 +297,27 @@ public static class CustomOptionManager
             }
             else
             {
-                var previousInfo = Tabs[index - 1];
+                var previousInfo = tabsToCreate[index - 1];
                 setting = UnityEngine.Object.Instantiate(gameSettings, customSettings[previousInfo.Key].transform.parent);
                 tab = UnityEngine.Object.Instantiate(roleTab, customTabs[previousInfo.Key].transform);
             }
 
-            customMenus[tabInfo.Key] = GetGameOptionsMenu(setting, tabInfo.Key);
-            customSettings[tabInfo.Key] = setting;
-            customTabHighlights[tabInfo.Key] = GetTabHighlight(tab, $"{tabInfo.Key}Tab", tabInfo.IconSprite);
+            customMenus[tabInfo.Key] = GetGameOptionsMenu(setting, $"{tabInfo.Key}OptionsMenu");
+            tabInfo.TitleTMP = GetTitleTMP(setting);
+            tabInfo.TitleTMP.SetText(tabInfo.Title);
+            
+            tabInfo.SettingsGameObject = customSettings[tabInfo.Key] = setting;
+            tabInfo.Highlight = customTabHighlights[tabInfo.Key] = GetTabHighlight(tab, $"{tabInfo.Key}Tab", tabInfo.IconSprite);
+            tabInfo.TabObject = tabInfo.Highlight.gameObject.transform.parent.gameObject;
             customTabs[tabInfo.Key] = tab;
         }
         
         gameTab.transform.position += Vector3.left * 3f;
         roleTab.transform.position += Vector3.left * 3f;
 
-        for (var index = 0; index < Tabs.Count; index++)
+        for (var index = 0; index < tabsToCreate.Count; index++)
         {
-            var tabInfo = Tabs[index];
+            var tabInfo = tabsToCreate[index];
             var tab = customTabs[tabInfo.Key];
             if (index == 0)
             {
@@ -253,6 +327,8 @@ public static class CustomOptionManager
             {
                 tab.transform.localPosition += Vector3.right * 1f;
             }
+
+            tabInfo.TabPositionObject = tab;
         }
 
         var tabs = new List<GameObject> { gameTab, roleTab };
@@ -284,23 +360,23 @@ public static class CustomOptionManager
         var menus = new Dictionary<string, Transform>();
         var optionBehaviours = new Dictionary<string, List<OptionBehaviour>>();
 
-        foreach (var tab in Tabs)
+        foreach (var tab in tabsToCreate)
         {
-            optionBehaviours[tab.Key] = customOptions[tab.Key] = new List<OptionBehaviour>();
+            optionBehaviours[tab.Key] = customOptions[tab.Key] = [];
             menus[tab.Key] = customMenus[tab.Key].transform;
 
-            var options = CustomOptionManager.Options.Where(x => x.Tab == tab);
+            var options = ModOptionUtility.Options.Where(x => x.Tab == tab);
 
             foreach (var customOption in options)
             {
                 if (customOption.OptionBehaviour == null)
                 {
-                    if (customOption.Type == CustomOption.Types.Boolean)
+                    if (customOption.Type == OptionType.Boolean)
                     {
                         var boolOption = UnityEngine.Object.Instantiate(boolTemplate, menus[tab.Key]);
                         optionBehaviours[tab.Key].Add(boolOption);
                         boolOption.OnValueChanged = new Action<OptionBehaviour>(_ => { });
-                        boolOption.TitleText.text = customOption.Name;
+                        boolOption.TitleText.text = customOption.DisplayName;
                         boolOption.CheckMark.enabled = boolOption.oldValue = customOption.CurrentSelection > 0;
                         customOption.OptionBehaviour = boolOption;
                     }
@@ -309,7 +385,7 @@ public static class CustomOptionManager
                         var stringOption = UnityEngine.Object.Instantiate(stringTemplate, menus[tab.Key]);
                         optionBehaviours[tab.Key].Add(stringOption);
                         stringOption.OnValueChanged = new Action<OptionBehaviour>(_ => { });
-                        stringOption.TitleText.text = customOption.Name;
+                        stringOption.TitleText.text = customOption.DisplayName;
                         stringOption.Value = stringOption.oldValue = customOption.CurrentSelection;
                         stringOption.ValueText.text = customOption.DisplayValue;
                         customOption.OptionBehaviour = stringOption;
@@ -353,12 +429,27 @@ public static class CustomOptionManager
     {
         foreach (var entry in settingsHighlightMap)
         {
-            entry.Key.SetActive(false);
-            entry.Value.enabled = false;
+            if (entry.Key)
+            {
+                entry.Key.SetActive(false);
+            }
+
+            if (entry.Value)
+            {
+                entry.Value.enabled = false;
+            }
+        }
+        
+        var element = settingsHighlightMap.ElementAt(index);
+        if (element.Key)
+        {
+            element.Key.SetActive(true);
         }
 
-        settingsHighlightMap.ElementAt(index).Key.SetActive(true);
-        settingsHighlightMap.ElementAt(index).Value.enabled = true;
+        if (element.Value)
+        {
+            element.Value.enabled = true;
+        }
     }
     
     private static SpriteRenderer GetTabHighlight(GameObject tab, string tabName, Sprite tabSprite)
@@ -372,15 +463,23 @@ public static class CustomOptionManager
 
     private static bool TryRefreshNames()
     {
-        var tab = Tabs.Count > 0 ? Tabs[0] : null;
-        if (tab == null) return false;
-        var obj = GameObject.Find(tab.Key);
-        if (obj == null) return false;
-        obj.transform.FindChild("GameGroup")
+        if (Tabs.Count == 0) return false;
+        var updated = false;
+        foreach (var tab in Tabs.Where(x => x.IsActive))
+        {
+            if (!tab.TitleTMP) continue;
+            tab.TitleTMP.SetText(tab.Title);
+            updated = true;
+        }
+        
+        return updated;
+    }
+
+    private static TextMeshPro GetTitleTMP(GameObject gameOptionMenu)
+    {
+        return gameOptionMenu.transform.Find("GameGroup")
             .FindChild("Text")
-            .GetComponent<TextMeshPro>()
-            .SetText(tab.Title);
-        return true;
+            .GetComponent<TextMeshPro>();
     }
 
     private static GameOptionsMenu GetGameOptionsMenu(GameObject setting, string name)

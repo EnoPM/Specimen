@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace AmongUsSpecimen.Options;
+namespace AmongUsSpecimen.ModOptions;
 
-public sealed class CustomOptionPreset
+public sealed class ModOptionPreset
 {
     public bool IsSharable { get; set; }
     public string Name { get; set; }

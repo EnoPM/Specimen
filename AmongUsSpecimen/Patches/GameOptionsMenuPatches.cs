@@ -1,5 +1,5 @@
 ﻿using HarmonyLib;
-using static AmongUsSpecimen.Options.CustomOptionManager;
+using static AmongUsSpecimen.ModOptions.ModOptionUtility;
 
 namespace AmongUsSpecimen.Patches;
 
@@ -11,7 +11,7 @@ internal static class GameOptionsMenuPatches
     private static void StartPostfix(GameOptionsMenu __instance)
     {
         UpdateTaskLimits(__instance);
-        CreateCustomOptionTabs(__instance);
+        CreateCustomOptionTabs();
     }
 
     [HarmonyPatch(nameof(GameOptionsMenu.Update))]

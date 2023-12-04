@@ -32,8 +32,7 @@ public class AutoUpdatedMod
 
     public void ToggleWindow()
     {
-        if (_window == null) return;
-        _window.SetActive(!_window.Enabled);
+        _window?.SetActive(!_window.Enabled);
     }
 
     public IEnumerator CoStart()
@@ -67,7 +66,7 @@ public class AutoUpdatedMod
         www.Dispose();
         Releases.Sort(CompareReleases);
         var latestRelease = Releases.FirstOrDefault(IsValidRelease);
-        if (latestRelease != null && latestRelease.Version != UpdaterConfig.VersionToCompare && latestRelease.Assets.Any(x => UpdaterConfig.FilesToUpdate.Contains(x.Name)))
+        if (latestRelease != null && latestRelease.Version > UpdaterConfig.VersionToCompare && latestRelease.Assets.Any(x => UpdaterConfig.FilesToUpdate.Contains(x.Name)))
         {
             NewUpdateAvailable(latestRelease);
         }

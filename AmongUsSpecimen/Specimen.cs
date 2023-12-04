@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text.Json;
 using AmongUsSpecimen.Cosmetics;
-using AmongUsSpecimen.Options;
+using AmongUsSpecimen.ModOptions;
 using AmongUsSpecimen.UI;
 using AmongUsSpecimen.Updater;
 using AmongUsSpecimen.Utils;
 using AmongUsSpecimen.VersionCheck;
 using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
 using Rewired;
@@ -28,7 +28,7 @@ public class Specimen : BasePlugin
 {
     public const string Guid = "specimen.eno.pm";
     private const string Name = "AmongUsSpecimen";
-    private const string Version = "0.0.2";
+    private const string Version = "0.1.0";
 
     internal const string ToggleSpecimenDashboardActionName = "ActionToggleSpecimenDashboard";
 
@@ -42,13 +42,16 @@ public class Specimen : BasePlugin
     internal static Specimen Instance { get; private set; }
     internal static readonly Harmony Harmony = new(Guid);
 
-    internal static string ResourcesDirectory => Path.Combine(Path.GetDirectoryName(Application.dataPath)!, "Specimen");
+    internal static string AmongUsDirectory => Path.GetDirectoryName(Application.dataPath)!;
+    internal static string ResourcesDirectory => Path.Combine(AmongUsDirectory, "Specimen");
+    internal static ConfigEntry<bool> UseSpecimenRegionsManager { get; private set; }
 
     public override void Load()
     {
         Instance = this;
         
         // Plugin startup logic
+        UseSpecimenRegionsManager = Config.Bind("Core", "Use Custom Regions Manager", true, "If set to false, Specimen will no override Among Us regions manager.");
         if (!Directory.Exists(ResourcesDirectory)) Directory.CreateDirectory(ResourcesDirectory);
 
         Harmony.PatchAll();
@@ -57,27 +60,16 @@ public class Specimen : BasePlugin
 
         IL2CPPChainloader.Instance.PluginLoad += PluginLoad;
 
-        InitSpecimenInAssembly(Assembly.GetExecutingAssembly());
+        InitSpecimenInAssembly(Assembly.GetExecutingAssembly(), Guid, Name);
 
         Log.LogInfo($"Plugin {Name} is loaded!");
     }
 
-    private static void UiManagerOnInitialized()
+    private void UiManagerOnInitialized()
     {
         NotificationManager.Start();
         ModManager.Instance.ShowModStamp();
         VersionHandshakeManager.Start();
-        var tab = new CustomOptionTab
-        {
-            Key = "TestTab",
-            Title = "Test Tab Options",
-            IconSprite = SpecimenSprites.ModSettingsTabIcon
-        };
-        CustomOptionManager.Tabs.Add(tab);
-        var opt = new CustomOption(tab, CustomOption.Types.Boolean, "Test Option Boolean",
-            new List<string> { "no", "yes" }, 0);
-        var opt2 = new CustomOption(tab, CustomOption.Types.Float, "Test Option Float",
-            new List<string> { "10", "12.5", "15", "17.5", "20", "22.5", "25", "27.5", "30", "32.5", "35", "37.5", "40" }, 0, opt, suffix: "s");
 #if DEBUG
         NotificationManager.DemoNotification();
 #endif
@@ -88,18 +80,19 @@ public class Specimen : BasePlugin
         if (pluginInfo.Dependencies.All(x => x.DependencyGUID != Guid)) return;
         Log.LogMessage(
             $"Loaded plugin: {pluginInfo.Metadata.Name} v{pluginInfo.Metadata.Version} ({assembly.ManifestModule.ModuleVersionId})");
-        InitSpecimenInAssembly(assembly);
+        InitSpecimenInAssembly(assembly, pluginInfo.Metadata.GUID, pluginInfo.Metadata.Name);
     }
 
-    private static void InitSpecimenInAssembly(Assembly assembly)
+    private static void InitSpecimenInAssembly(Assembly assembly, string guid, string name)
     {
         ModUpdaterManager.RegisterAssembly(assembly);
         CustomRegionsManager.RegisterAssembly(assembly);
         RpcManager.RegisterAssembly(assembly);
         CustomCosmeticsManager.RegisterAssembly(assembly);
-        RegisterInIl2CppAttribute.RegisterAssembly(assembly);
+        RegisterMonoBehaviourAttribute.RegisterAssembly(assembly);
         CustomKeyBindManager.RegisterAssembly(assembly);
         VersionHandshakeManager.RegisterAssembly(assembly);
+        ModOptionManager.RegisterAssembly(assembly);
         
         Instance.Log.LogMessage($"LocalHandshake: {VersionHandshakeManager.LocalHandshake.Mods["AmongUsSpecimen"].Version}");
     }

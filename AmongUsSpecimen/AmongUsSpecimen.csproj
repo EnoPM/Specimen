@@ -5,7 +5,7 @@
         <PackageId>AmongUs.Specimen</PackageId>
         <AssemblyName>AmongUsSpecimen</AssemblyName>
         <Description>Among Us BepinEx plugin updater</Description>
-        <Version>0.0.2</Version>
+        <Version>0.1.0</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>latest</LangVersion>
         <RestoreAdditionalProjectSources>
@@ -22,7 +22,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AmongUs.GameLibs.Steam" Version="2023.10.24" />
+        <PackageReference Include="AmongUs.GameLibs.Steam" Version="2023.11.28" />
         <PackageReference Include="BepInEx.IL2CPP.MSBuild" Version="2.1.0-rc.1">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -53,12 +53,18 @@
     </ItemGroup>
 
     <Target Name="CopyPlugins" AfterTargets="AfterBuild">
-        <Copy SourceFiles="$(TargetPath)" DestinationFolder="C:\Program Files (x86)\Steam\steamapps\common\Among Us\BepInEx\plugins" />
+        <Copy SourceFiles="$(TargetPath)" DestinationFolder="C:\Program Files (x86)\Steam\steamapps\common\Among Us - Specimen\BepInEx\plugins" />
     </Target>
     <Target Name="CopyPluginsToBetterOtherRolesLibs" AfterTargets="AfterBuild">
         <Copy SourceFiles="$(TargetPath)" DestinationFolder="C:\Users\Utilisateur\RiderProjects\BetterOtherRoles-v2\BetterOtherRoles\libs" />
     </Target>
     <Target Name="CopyPluginsToBetterOtherRolesGameFolder" AfterTargets="AfterBuild">
         <Copy SourceFiles="$(TargetPath)" DestinationFolder="C:\Program Files (x86)\Steam\steamapps\common\Among Us - BetterOtherRoles2\BepInEx\plugins" />
+    </Target>
+    <Target Name="CopyPluginsToTheOtherRolesProject" AfterTargets="AfterBuild">
+        <Copy SourceFiles="$(TargetPath)" DestinationFolder="C:\Users\Utilisateur\RiderProjects\TOR-Devel\TheOtherRoles\libs" />
+    </Target>
+    <Target Name="CopyPluginsToTheOtherRolesGameFolder" AfterTargets="AfterBuild">
+        <Copy SourceFiles="$(TargetPath)" DestinationFolder="C:\Program Files (x86)\Steam\steamapps\common\Among Us - TheOtherRoles\BepInEx\plugins" />
     </Target>
 </Project>

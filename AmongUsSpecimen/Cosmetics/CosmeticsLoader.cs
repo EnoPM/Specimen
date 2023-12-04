@@ -22,10 +22,6 @@ public class CosmeticsLoader : MonoBehaviour
     {
         if (InputManager.GetKeyDown(KeyCode.F12))
         {
-            var playerToMorph =
-                PlayerControl.AllPlayerControls.ToArray()
-                    .FirstOrDefault(x => x && x.Data != null && x.cosmetics && !x.AmOwner) ?? PlayerControl.LocalPlayer;
-            PlayerControl.LocalPlayer.StartCoroutine(PlayerControl.LocalPlayer.CoMorph(playerToMorph, 5f));
             var allHandshakes = JsonSerializer.Serialize(VersionHandshakeManager.AllHandshakes);
             var playerOwnerIds = new System.Collections.Generic.Dictionary<string, int>();
             foreach (var pc in PlayerControl.AllPlayerControls)
@@ -41,13 +37,13 @@ public class CosmeticsLoader : MonoBehaviour
         }
     }
 
-    public void FetchCosmetics(string repository, string manifestFileName)
+    public void FetchCosmetics(string repository, string manifestFileName, string customDirectory)
     {
-        if (isRunning) return;
-        this.StartCoroutine(CoFetchCosmetics(repository, manifestFileName));
+        if (isRunning || customDirectory == null) return;
+        this.StartCoroutine(CoFetchCosmetics(repository, manifestFileName, customDirectory));
     }
 
-    private IEnumerator CoFetchCosmetics(string repository, string manifestFileName)
+    private IEnumerator CoFetchCosmetics(string repository, string manifestFileName, string customDirectory)
     {
         isRunning = true;
         
@@ -77,45 +73,42 @@ public class CosmeticsLoader : MonoBehaviour
         www.downloadHandler.Dispose();
         www.Dispose();
 
-        yield return CoDownloadHats(response, repository);
+        yield return CoDownloadHats(response, repository, customDirectory);
 
         isRunning = false;
     }
 
-    private static IEnumerator CoDownloadHats(ManifestFile response, string repository)
+    private static IEnumerator CoDownloadHats(ManifestFile response, string repository, string hatsDirectory)
     {
         while (NotificationManager.Window == null)
         {
             yield return new WaitForEndOfFrame();
         }
-        
-        var hatsDirectory = CustomCosmeticsManager.HatsDirectory;
+        if (hatsDirectory == null) yield break;
         if (!Directory.Exists(hatsDirectory)) Directory.CreateDirectory(hatsDirectory);
-        CustomCosmeticsManager.UnregisteredHats.AddRange(CustomCosmeticsManager.SanitizeHats(response));
-        var toDownload = CustomCosmeticsManager.GenerateDownloadList(CustomCosmeticsManager.UnregisteredHats, out var totalFileCount);
+        CustomCosmeticsManager.UnregisteredHats.AddRange(CustomCosmeticsManager.SanitizeHats(response, hatsDirectory));
+        var toDownload = CustomCosmeticsManager.GenerateDownloadList(CustomCosmeticsManager.UnregisteredHats, hatsDirectory, out var totalFileCount);
         Specimen.Instance.Log.LogMessage($"{toDownload.Count} hat asset files to download");
-        if (toDownload.Count > 0)
+        if (toDownload.Count <= 0) yield break;
+        var notification = NotificationManager.AddNotification(new DownloadListNotification(
+            totalFileCount,
+            totalFileCount - toDownload.Count,
+            Translation.ResourceManager.GetString("CustomCosmeticsDownloadNotificationTitle")));
+        notification.UpdateProgression();
+        foreach (var fileName in toDownload)
         {
-            var notification = NotificationManager.AddNotification(new DownloadListNotification(
-                totalFileCount,
-                totalFileCount - toDownload.Count,
-                Translation.ResourceManager.GetString("CustomCosmeticsDownloadNotificationTitle")));
-            notification.UpdateProgression();
-            foreach (var fileName in toDownload)
+            while (notification.PauseDownload)
             {
-                notification.IncrementDownloadFile();
-                while (notification.PauseDownload)
-                {
-                    yield return new WaitForEndOfFrame();
-                }
-                yield return CoDownloadAssetFile($"https://raw.githubusercontent.com/{repository}/master/hats/{Uri.EscapeDataString(fileName)}", Path.Combine(hatsDirectory, fileName));
-                CustomCosmeticsManager.OnHatFileDownloaded(fileName);
+                yield return new WaitForEndOfFrame();
             }
-
-            yield return new WaitForSeconds(2f);
-            notification.Remove();
+            yield return CoDownloadAssetFile($"https://raw.githubusercontent.com/{repository}/master/hats/{Uri.EscapeDataString(fileName)}", Path.Combine(hatsDirectory, fileName));
+            notification.IncrementDownloadFile();
+            CustomCosmeticsManager.OnHatFileDownloaded(fileName);
         }
-        
+
+        yield return new WaitForSeconds(2f);
+        notification.Remove();
+
     }
 
     private static IEnumerator CoDownloadAssetFile(string fileUrl, string destination)

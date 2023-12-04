@@ -93,12 +93,14 @@ public class UpdaterWindow : UiWindow
         UiFactory.SetLayoutElement(scrollbarContainer, minHeight: 400, flexibleHeight: 0, minWidth: MinWidth,
             flexibleWidth: 0);
         
-        var scrollerObject = UiFactory.CreateScrollView(scrollbarContainer, "ReleaseScrollView", out var content, out _);
+        var scrollerObject = UiFactory.CreateScrollView(scrollbarContainer, "ReleaseScrollView", out var content, out _, minWidth: MinWidth, minHeight: MinHeight, color: UIPalette.Dark);
         UiFactory.SetLayoutElement(scrollerObject, MinWidth, 25, 0, 9999);
         UiFactory.SetLayoutElement(content, MinWidth, 25, 0, 9999);
         
         _releaseDescription = UiFactory.CreateLabel(content, "ReleaseDescription", string.Empty, TextAnchor.UpperLeft, fontSize: 18);
-        UiFactory.SetLayoutElement(_releaseDescription.gameObject, MinWidth, flexibleWidth: 0, minHeight: 40, flexibleHeight: 0);
+        _releaseDescription.horizontalOverflow = HorizontalWrapMode.Wrap;
+        // _releaseDescription.resizeTextForBestFit = true;
+        UiFactory.SetLayoutElement(_releaseDescription.gameObject, MinWidth - 50, flexibleWidth: 0, minHeight: 40, flexibleHeight: 0, preferredWidth: 0);
         
         Header.SetText($"{Title} {UpdatedMod.UpdaterConfig.RepositoryOwner}/{UpdatedMod.UpdaterConfig.RepositoryName}");
         

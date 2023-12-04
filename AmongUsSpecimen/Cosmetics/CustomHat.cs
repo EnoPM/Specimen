@@ -32,4 +32,6 @@ public class CustomHat : ICustomHat
 
     [JsonPropertyName("flipresource")] public string FlipResource { get; set; }
     [JsonPropertyName("reshashf")] public string FlipResource_Hash { get; set; }
+    
+    internal string HatsDirectoryPath { get; set; }
 }

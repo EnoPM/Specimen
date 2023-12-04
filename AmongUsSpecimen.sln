@@ -4,6 +4,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AmongUsSpecimen", "AmongUsS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpecimenDemo", "SpecimenDemo\SpecimenDemo.csproj", "{DB94A789-F64F-4730-9238-D56D2603EF31}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ControllerButtonsLogger", "ControllerButtonsLogger\ControllerButtonsLogger.csproj", "{3B7FDC0E-487E-413F-9C63-72F20A8DFD41}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpecimenDebugger", "SpecimenDebugger\SpecimenDebugger.csproj", "{92A4ECE1-029A-4339-9226-48FFEB2DA579}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +22,13 @@ Global
 		{DB94A789-F64F-4730-9238-D56D2603EF31}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB94A789-F64F-4730-9238-D56D2603EF31}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DB94A789-F64F-4730-9238-D56D2603EF31}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B7FDC0E-487E-413F-9C63-72F20A8DFD41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B7FDC0E-487E-413F-9C63-72F20A8DFD41}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B7FDC0E-487E-413F-9C63-72F20A8DFD41}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B7FDC0E-487E-413F-9C63-72F20A8DFD41}.Release|Any CPU.Build.0 = Release|Any CPU
+		{92A4ECE1-029A-4339-9226-48FFEB2DA579}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92A4ECE1-029A-4339-9226-48FFEB2DA579}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92A4ECE1-029A-4339-9226-48FFEB2DA579}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92A4ECE1-029A-4339-9226-48FFEB2DA579}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using AmongUsSpecimen.VersionCheck;
+using HarmonyLib;
 
 namespace AmongUsSpecimen.Patches;
 
@@ -17,5 +18,19 @@ internal static class HudManagerPatches
     private static void UpdatePostfix(HudManager __instance)
     {
         __instance.GameSettings.gameObject.SetActive(false);
+    }
+
+    [HarmonyPatch(nameof(HudManager.Start))]
+    [HarmonyPostfix]
+    private static void StartPostfix()
+    {
+        VersionHandshakeManager.Window?.SetActive(true);
+    }
+
+    [HarmonyPatch(nameof(HudManager.OnDestroy))]
+    [HarmonyPostfix]
+    private static void OnDestroyPostfix()
+    {
+        VersionHandshakeManager.Window?.SetActive(false);
     }
 }

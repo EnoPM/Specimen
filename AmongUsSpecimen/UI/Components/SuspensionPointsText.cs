@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace AmongUsSpecimen.UI.Components;
 
-[RegisterInIl2Cpp]
+[RegisterMonoBehaviour]
 public class SuspensionPointsText : MonoBehaviour
 {
     public Text Text { get; set; }

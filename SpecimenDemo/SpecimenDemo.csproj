@@ -16,7 +16,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AmongUs.GameLibs.Steam" Version="2023.10.24" />
+        <PackageReference Include="AmongUs.GameLibs.Steam" Version="2023.11.28" />
         <PackageReference Include="BepInEx.IL2CPP.MSBuild" Version="2.1.0-rc.1">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -28,6 +28,6 @@
       <ProjectReference Include="..\AmongUsSpecimen\AmongUsSpecimen.csproj" />
     </ItemGroup>
     <Target Name="CopyPlugins" AfterTargets="AfterBuild">
-        <Copy SourceFiles="$(TargetPath)" DestinationFolder="C:\Program Files (x86)\Steam\steamapps\common\Among Us\BepInEx\plugins" />
+        <Copy SourceFiles="$(TargetPath)" DestinationFolder="C:\Program Files (x86)\Steam\steamapps\common\Among Us - Specimen\BepInEx\plugins" />
     </Target>
 </Project>

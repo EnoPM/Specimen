@@ -17,10 +17,10 @@ internal static class CustomCosmeticsManager
     private static string CustomSkinsDirectory => Path.Combine(Specimen.ResourcesDirectory, "Cosmetics");
     internal static string HatsDirectory => Path.Combine(CustomSkinsDirectory, "Hats");
     
-    internal static readonly List<CustomHat> UnregisteredHats = new();
+    internal static readonly List<CustomHat> UnregisteredHats = [];
     internal static readonly Dictionary<string, CustomHat> RegisteredHats = new();
     internal static readonly Dictionary<string, HatViewData> HatViewDataCache = new();
-    private static readonly List<HatParent> HatParentCache = new();
+    private static readonly List<HatParent> HatParentCache = [];
     internal static readonly Dictionary<string, HatExtension> HatExtensionCache = new();
     private static readonly Dictionary<string, List<string>> HatFiles = new();
     
@@ -55,7 +55,10 @@ internal static class CustomCosmeticsManager
         foreach (var result in results)
         {
             var repository = result.Attribute.Repository;
-            Loader.FetchCosmetics(repository, result.Attribute.ManifestFileName);
+            var directory = result.Attribute.CustomDirectory != string.Empty
+                ? Path.Combine(Specimen.AmongUsDirectory, result.Attribute.CustomDirectory)
+                : HatsDirectory;
+            Loader.FetchCosmetics(repository, result.Attribute.ManifestFileName, directory);
         }
     }
     
@@ -88,18 +91,18 @@ internal static class CustomCosmeticsManager
         var viewData = HatViewDataCache[ch.Name] = ScriptableObject.CreateInstance<HatViewData>();
         var hat = ScriptableObject.CreateInstance<HatData>();
 
-        viewData.MainImage = CreateHatSprite(ch.Resource);
+        viewData.MainImage = CreateHatSprite(ch.Resource, ch.HatsDirectoryPath);
         viewData.FloorImage = viewData.MainImage;
         if (ch.BackResource != null)
         {
-            viewData.BackImage = CreateHatSprite(ch.BackResource);
+            viewData.BackImage = CreateHatSprite(ch.BackResource, ch.HatsDirectoryPath);
             viewData.LeftBackImage = viewData.BackImage;
             ch.Behind = true;
         }
 
         if (ch.ClimbResource != null)
         {
-            viewData.ClimbImage = CreateHatSprite(ch.ClimbResource);
+            viewData.ClimbImage = CreateHatSprite(ch.ClimbResource, ch.HatsDirectoryPath);
             viewData.LeftClimbImage = viewData.ClimbImage;
         }
 
@@ -125,12 +128,12 @@ internal static class CustomCosmeticsManager
 
         if (ch.FlipResource != null)
         {
-            extend.FlipImage = CreateHatSprite(ch.FlipResource);
+            extend.FlipImage = CreateHatSprite(ch.FlipResource, ch.HatsDirectoryPath);
         }
 
         if (ch.BackFlipResource != null)
         {
-            extend.BackFlipImage = CreateHatSprite(ch.BackFlipResource);
+            extend.BackFlipImage = CreateHatSprite(ch.BackFlipResource, ch.HatsDirectoryPath);
         }
 
         if (testOnly)
@@ -148,9 +151,9 @@ internal static class CustomCosmeticsManager
         return hat;
     }
     
-    private static Sprite CreateHatSprite(string path)
+    private static Sprite CreateHatSprite(string path, string hatsDirectory)
     {
-        var texture = ResourceHelpers.LoadTextureFromPath(Path.Combine(HatsDirectory, path));
+        var texture = ResourceHelpers.LoadTextureFromPath(Path.Combine(hatsDirectory, path));
         if (texture == null) return null;
         var sprite = Sprite.Create(texture, 
             new Rect(0, 0, texture.width, texture.height),
@@ -225,9 +228,9 @@ internal static class CustomCosmeticsManager
         return hats;
     }
 
-    internal static List<CustomHat> SanitizeHats(ManifestFile response)
+    internal static IEnumerable<CustomHat> SanitizeHats(ManifestFile response, string hatsDirectory)
     {
-        if (response.Hats == null) return new List<CustomHat>();
+        if (response.Hats == null) return [];
         foreach (var hat in response.Hats)
         {
             hat.Resource = SanitizeFileName(hat.Resource);
@@ -235,6 +238,7 @@ internal static class CustomCosmeticsManager
             hat.ClimbResource = SanitizeFileName(hat.ClimbResource);
             hat.FlipResource = SanitizeFileName(hat.FlipResource);
             hat.BackFlipResource = SanitizeFileName(hat.BackFlipResource);
+            hat.HatsDirectoryPath = hatsDirectory;
         }
 
         return response.Hats;
@@ -272,20 +276,20 @@ internal static class CustomCosmeticsManager
         var completed = new List<bool>();
         if (fileName == hat.Resource)
         {
-            viewData.MainImage = CreateHatSprite(hat.Resource);
+            viewData.MainImage = CreateHatSprite(hat.Resource, hat.HatsDirectoryPath);
             viewData.FloorImage = viewData.MainImage;
         }
 
         if (hat.BackResource != null && fileName == hat.BackResource)
         {
-            viewData.BackImage = CreateHatSprite(hat.BackResource);
+            viewData.BackImage = CreateHatSprite(hat.BackResource, hat.HatsDirectoryPath);
             viewData.LeftBackImage = viewData.BackImage;
             hat.Behind = true;
         }
 
         if (hat.ClimbResource != null && fileName == hat.ClimbResource)
         {
-            viewData.ClimbImage = CreateHatSprite(hat.ClimbResource);
+            viewData.ClimbImage = CreateHatSprite(hat.ClimbResource, hat.HatsDirectoryPath);
             viewData.LeftClimbImage = viewData.ClimbImage;
         }
         
@@ -335,13 +339,11 @@ internal static class CustomCosmeticsManager
         }
     }
 
-    internal static List<string> GenerateDownloadList(List<CustomHat> hats, out int totalFileCount)
+    internal static List<string> GenerateDownloadList(List<CustomHat> hats, string hatsDirectory, out int totalFileCount)
     {
         totalFileCount = 0;
         var algorithm = MD5.Create();
         var toDownload = new List<string>();
-
-        var hatsDirectory = HatsDirectory;
         
         foreach (var hat in hats)
         {

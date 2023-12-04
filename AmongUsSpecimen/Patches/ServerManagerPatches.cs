@@ -19,6 +19,7 @@ internal static class ServerManagerPatches
     [HarmonyPrefix]
     private static bool LoadServersPrefix(ServerManager __instance)
     {
+        if (!Specimen.UseSpecimenRegionsManager.Value) return true;
         if (FileIO.Exists(CustomRegionsManager.RegionFileJson))
         {
             try
@@ -54,6 +55,7 @@ internal static class ServerManagerPatches
     [HarmonyPrefix]
     private static bool SaveServersPrefix(ServerManager __instance)
     {
+        if (!Specimen.UseSpecimenRegionsManager.Value) return true;
         try
         {
             FileIO.WriteAllText(CustomRegionsManager.RegionFileJson, JsonConvert.SerializeObject(

@@ -1,16 +1,15 @@
-﻿using AmongUsSpecimen.UI;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using UniverseLib.UI;
 
-namespace AmongUsSpecimen.Options;
+namespace AmongUsSpecimen.UI.LobbyHud;
 
-public class UiOptionTab
+internal abstract class UiOptionTab
 {
     protected readonly GameObject _gameObject;
     protected readonly int Width;
     protected readonly int Height;
-    public UiOptionTab(GameObject parent, int width, int height)
+    protected UiOptionTab(GameObject parent, int width, int height)
     {
         Width = width;
         Height = height;
