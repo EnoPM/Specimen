@@ -23,12 +23,24 @@ public abstract class BaseModOption
     public OptionRestriction Restriction { get; private set; } = OptionRestriction.Public;
     public OptionSaveLocation SaveLocation { get; private set; } = OptionSaveLocation.Preset;
     public bool EnabledIfParentDisabled { get; private set; }
+    internal Action OnUiLabelClick { get; set; }
+
+    public void Update()
+    {
+        try
+        {
+            UiOption?.UiUpdate();
+            BehaviourUpdate();
+        }
+        catch
+        {
+        }
+    }
 
     public BaseModOption SetRestriction(OptionRestriction restriction = OptionRestriction.Public)
     {
         Restriction = restriction;
-        UiOption?.UiUpdate();
-        BehaviourUpdate();
+        Update();
         return this;
     }
 
@@ -36,15 +48,14 @@ public abstract class BaseModOption
     {
         SaveLocation = location;
         SetCurrentSelection(GetStorageSelection(), false);
-        UiOption?.UiUpdate();
-        BehaviourUpdate();
+        Update();
         return this;
     }
 
     public BaseModOption SetEnabledIfParentDisabled(bool value = false)
     {
         EnabledIfParentDisabled = value;
-        UiOption?.UiUpdate();
+        Update();
         return this;
     }
 
@@ -58,8 +69,8 @@ public abstract class BaseModOption
         {
             IsHeader = value.Value;
         }
-        UiOption?.UiUpdate();
-        BehaviourUpdate();
+
+        Update();
         return this;
     }
 
@@ -68,7 +79,7 @@ public abstract class BaseModOption
         get => _currentSelection;
         set => SetCurrentSelection(value);
     }
-    
+
     internal const float BaseOptionYOffset = 0.5f;
     internal const float AdditionalHeaderYOffset = 0.25f;
 
@@ -89,7 +100,7 @@ public abstract class BaseModOption
             stringOption.Value = stringOption.oldValue = CurrentSelection;
             stringOption.ValueText.text = DisplayValue;
         }
-        
+
         var enabled = IsParentEnabled;
         OptionBehaviour.gameObject.SetActive(enabled);
     }
@@ -101,7 +112,8 @@ public abstract class BaseModOption
         var index = value < min ? max : value > max ? min : value;
         if (index == _currentSelection) return;
         _currentSelection = index;
-        if (Restriction == OptionRestriction.Public && SaveLocation != OptionSaveLocation.Local && AmongUsClient.Instance && AmongUsClient.Instance.AmHost)
+        if (Restriction == OptionRestriction.Public && SaveLocation != OptionSaveLocation.Local &&
+            AmongUsClient.Instance && AmongUsClient.Instance.AmHost)
         {
             ModOptionManager.RpcSetOptionSelection(Id, _currentSelection);
         }
@@ -112,6 +124,7 @@ public abstract class BaseModOption
         {
             SaveOption();
         }
+
         ValueChanged?.Invoke();
     }
 
@@ -120,7 +133,10 @@ public abstract class BaseModOption
     internal UiCustomOption UiOption { get; set; }
     public bool IsHeader { get; private set; }
     internal bool IsEnabled => CurrentSelection > 0 && IsParentEnabled;
-    internal bool IsParentEnabled => Parent == null || (!EnabledIfParentDisabled && Parent.IsEnabled) || (EnabledIfParentDisabled && !Parent.IsEnabled && Parent.IsParentEnabled);
+
+    internal bool IsParentEnabled => Parent == null || (!EnabledIfParentDisabled && Parent.IsEnabled) ||
+                                     (EnabledIfParentDisabled && !Parent.IsEnabled && Parent.IsParentEnabled);
+
     internal IEnumerable<BaseModOption> Children => ModOptionManager.Options.Where(x => x.Parent == this);
 
     private string UniqueName => $"{Tab.Key}:" + Name + (Parent == null ? string.Empty : $":{Parent.UniqueName}");
@@ -151,6 +167,7 @@ public abstract class BaseModOption
                 OptionStorage.Current.GetCurrentPreset().Values[Id] = CurrentSelection;
                 break;
         }
+
         OptionStorage.SaveCurrentPreset();
     }
 
@@ -197,6 +214,7 @@ public abstract class BaseModOption
             {
                 i++;
             }
+
             cursor = cursor.Parent;
         }
 
@@ -214,7 +232,7 @@ public abstract class BaseModOption
             prefix += blankChar;
         }
 
-        return $"<size={prefixSize}>{ColorHelpers.Colorize(UIPalette.Transparent , prefix)}</size>{Name}";
+        return $"<size={prefixSize}>{ColorHelpers.Colorize(UIPalette.Transparent, prefix)}</size>{Name}";
     }
 
     public virtual string DisplayName => GetDisplayName();

@@ -2,6 +2,7 @@
 using AmongUsSpecimen.UI.Components;
 using UnityEngine;
 using UnityEngine.UI;
+using UniverseLib;
 using UniverseLib.UI;
 
 namespace AmongUsSpecimen.UI.LobbyHud;
@@ -30,6 +31,9 @@ internal class UiCustomOption
             new Vector4(paddingTop, 0f, 0f, 0f), UIPalette.LightDanger, TextAnchor.MiddleLeft);
         _container.GetComponent<Image>().enabled = false;
         UiFactory.SetLayoutElement(_container, width, height, 0, 0, 0, 0);
+
+        var btn = _container.AddComponent<Button>();
+        btn.onClick.AddListener(OnOptionClick);
         
         Label = UiFactory.CreateLabel(_container, "Label", Option.GetDisplayName(5), TextAnchor.MiddleLeft,
             LabelColor, true, 25);
@@ -60,6 +64,11 @@ internal class UiCustomOption
 
         Option.UiOption = this;
         Option.ValueChanged += UiUpdate;
+    }
+
+    private void OnOptionClick()
+    {
+        Option.OnUiLabelClick?.Invoke();
     }
 
     private Color LabelColor => Option.Restriction switch

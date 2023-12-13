@@ -43,7 +43,7 @@ public class OptionsHudWindow : UiWindow
         {
             var item = UiFactory.CreateVerticalGroup(buttonsContainer, "TabButton", false, false, true, true,
                 childAlignment: TextAnchor.MiddleCenter);
-            UiFactory.SetLayoutElement(item, 70, 70, 0, 0, 0, 0);
+            UiFactory.SetLayoutElement(item, 70, 57, 0, 0, 0, 0);
             var image = item.GetComponent<Image>();
             image.color = i == _currentTabIndex ? Palette.EnabledColor : Palette.DisabledClear;
             if (i < VanillaTabCount)

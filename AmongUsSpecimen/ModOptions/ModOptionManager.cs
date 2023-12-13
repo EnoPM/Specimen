@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
 using AmongUsSpecimen.Utils;
-using UnityEngine;
 
 namespace AmongUsSpecimen.ModOptions;
 
@@ -9,6 +8,7 @@ internal static class ModOptionManager
 {
     internal static readonly List<ModOptionTab> Tabs = [];
     internal static readonly List<BaseModOption> Options = [];
+    internal static PresetManagerWindow PresetManagerWindow { get; set; }
 
     internal static void RegisterAssembly(Assembly assembly)
     {
@@ -21,8 +21,10 @@ internal static class ModOptionManager
                 Specimen.Instance.Log.LogWarning($"Unable to load {item.Type.FullName} because is not a static type");
                 continue;
             }
+
             System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(item.Type.TypeHandle);
         }
+
         foreach (var item in results)
         {
             if (item.Attribute.ContainerType == ContainerType.Tabs) continue;
@@ -31,6 +33,7 @@ internal static class ModOptionManager
                 Specimen.Instance.Log.LogWarning($"Unable to load {item.Type.FullName} because is not a static type");
                 continue;
             }
+
             System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(item.Type.TypeHandle);
         }
     }
@@ -63,7 +66,7 @@ internal static class ModOptionManager
         {
             values[presetSelection.Key] = presetSelection.Value;
         }
-        
+
         RpcBulkSetOptionSelection(receiver, values);
     }
 
@@ -87,7 +90,7 @@ internal static class ModOptionManager
             Specimen.Instance.Log.LogWarning($"SetOptionSelection: unknown option id {optionId}");
             return;
         }
-        
+
         option.CurrentSelection = selection;
     }
 }

@@ -11,5 +11,9 @@ internal class PresetConfigFile
     public Dictionary<int, int> Global { get; set; }
     public Dictionary<int, int> Local { get; set; }
 
-    public ModOptionPreset GetCurrentPreset() => Presets == null ? null : Presets.Count > CurrentPresetIdx ? Presets[CurrentPresetIdx] : Presets.Count > 0 ? Presets[0] : null;
+    public ModOptionPreset GetCurrentPreset()
+    {
+        if (CurrentPresetIdx == 0 || Presets == null || Presets.Count == 0) return OnlinePreset;
+        return Presets.Count > CurrentPresetIdx - 1 ? Presets[CurrentPresetIdx - 1] : Presets[0];
+    }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using AmongUs.GameOptions;
+using AmongUsSpecimen.Utils;
 using UnityEngine;
 using UnityEngine.UI;
 using UniverseLib.UI;
@@ -68,6 +69,10 @@ internal class UiVanillaOptionTab : UiOptionTab
         if (!IsOptionsReady) return string.Empty;
         var killDistance = GameOptionsManager.Instance.CurrentGameOptions.GetInt(Int32OptionNames.KillDistance);
         var stringName = (StringNames)(204 + killDistance);
+        if (!ResourceHelpers.TranslationsInitialized)
+        {
+            return stringName.ToString();
+        }
         return DestroyableSingleton<TranslationController>.Instance.GetString(stringName);
     }
     
@@ -76,6 +81,10 @@ internal class UiVanillaOptionTab : UiOptionTab
         if (!IsOptionsReady) return string.Empty;
         var taskBarMode = GameOptionsManager.Instance.CurrentGameOptions.GetInt(Int32OptionNames.TaskBarMode);
         var stringName = (StringNames)(277 + taskBarMode);
+        if (!ResourceHelpers.TranslationsInitialized)
+        {
+            return stringName.ToString();
+        }
         return DestroyableSingleton<TranslationController>.Instance.GetString(stringName);
     }
     

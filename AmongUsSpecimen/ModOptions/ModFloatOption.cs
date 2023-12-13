@@ -13,6 +13,10 @@ public class ModFloatOption : BaseModOption
     
     public ModFloatOption(ModOptionTab tab, string name, float minValue, float maxValue, float step, float defaultValue, BaseModOption parent = null, string prefix = "", string suffix = "") : base(OptionType.Float, tab, name, parent)
     {
+        if ((minValue < 0f && maxValue < 0f) || step < 0f)
+        {
+            throw new Exception("ModFloatOption range cannot be negative");
+        }
         var selections = new List<string>();
         for (var i = minValue; i <= maxValue; i += step)
         {

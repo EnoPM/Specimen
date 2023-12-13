@@ -1,5 +1,6 @@
 ﻿using System;
 using AmongUs.GameOptions;
+using AmongUsSpecimen.Utils;
 
 namespace AmongUsSpecimen.UI.LobbyHud;
 
@@ -151,7 +152,7 @@ internal sealed class VanillaOptionData
     {
         return LabelGetter != null
             ? LabelGetter()
-            : DestroyableSingleton<TranslationController>.Instance.GetString(StringName);
+            : ResourceHelpers.TranslationsInitialized ? DestroyableSingleton<TranslationController>.Instance.GetString(StringName) : StringName.ToString();
     }
 
     internal bool GetBool()

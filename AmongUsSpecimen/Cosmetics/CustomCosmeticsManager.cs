@@ -96,7 +96,8 @@ internal static class CustomCosmeticsManager
         if (ch.BackResource != null)
         {
             viewData.BackImage = CreateHatSprite(ch.BackResource, ch.HatsDirectoryPath);
-            viewData.LeftBackImage = viewData.BackImage;
+            // TODO: Check if next line is really needed and don't cause unexpected behaviour
+            // viewData.LeftBackImage = viewData.BackImage;
             ch.Behind = true;
         }
 

@@ -50,4 +50,8 @@ public static class ResourceHelpers
         ImageConversion.LoadImage(texture, bytes, false);
         return texture;
     }
+
+    internal static bool TranslationsInitialized => DestroyableSingleton<TranslationController>.InstanceExists &&
+                                                  DestroyableSingleton<TranslationController>.Instance
+                                                      .currentLanguage != null;
 }

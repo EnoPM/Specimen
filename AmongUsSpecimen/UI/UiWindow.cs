@@ -25,8 +25,8 @@ public abstract class UiWindow : PanelBase
     public virtual bool DisableGameClickWhenOpened => true;
     protected WindowHeader Header { get; set; }
     
-    public float InnerWidth => MinWidth - Paddings.y - Paddings.w;
-    public float InnerHeight => MinHeight - Paddings.x - Paddings.z;
+    public int InnerWidth => MinWidth - Mathf.RoundToInt(Paddings.y - Paddings.w);
+    public int InnerHeight => MinHeight - Mathf.RoundToInt(Paddings.x - Paddings.z) - (DisplayTitleBar ? 25 : 0);
     
     public override Vector2 DefaultAnchorMin => Vector2.zero;
     public override Vector2 DefaultAnchorMax => Vector2.zero;

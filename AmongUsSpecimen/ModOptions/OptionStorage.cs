@@ -1,12 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using AmongUs.GameOptions;
 
 namespace AmongUsSpecimen.ModOptions;
 
 internal static class OptionStorage
 {
-    internal static string PresetConfigFile => Path.Combine(Specimen.ResourcesDirectory, "Presets.json");
+    private static string PresetConfigFile => Path.Combine(Specimen.ResourcesDirectory, "Presets.json");
     internal static readonly PresetConfigFile Current;
 
     static OptionStorage()
@@ -40,9 +42,9 @@ internal static class OptionStorage
 
         Current = new PresetConfigFile
         {
-            CurrentPresetIdx = 0,
+            CurrentPresetIdx = 1,
             OnlinePreset = defaultOnlinePreset,
-            Presets = [defaultCurrentPreset, defaultOnlinePreset],
+            Presets = [defaultCurrentPreset],
             Global = new Dictionary<int, int>(),
             Local = new Dictionary<int, int>()
         };
@@ -51,8 +53,18 @@ internal static class OptionStorage
 
     internal static void SavePreset(ModOptionPreset preset)
     {
-        var resource = Current.Presets.Find(x => x.Name == preset.Name);
-        resource.Update(preset);
+        var allPresets = new List<ModOptionPreset> { Current.OnlinePreset };
+        allPresets.AddRange(Current.Presets);
+        var resource = allPresets.Find(x => x == preset);
+        if (resource != null)
+        {
+            resource.Update(preset);
+        }
+        else
+        {
+            Current.Presets.Add(preset);
+        }
+        
         Persist();
     }
 
@@ -68,6 +80,26 @@ internal static class OptionStorage
         from.Name = to.Name;
         from.IsSharable = to.IsSharable;
         from.Values = to.Values;
+    }
+
+    internal static void ApplyVanillaOptions()
+    {
+        var currentPreset = Current.GetCurrentPreset();
+        if (GameOptionsManager.Instance == null || !GameManager.Instance || GameManager.Instance.LogicOptions == null || GameManager.Instance.LogicOptions.currentGameOptions == null || string.IsNullOrEmpty(currentPreset.VanillaOptions))
+        {
+            Specimen.Instance.Log.LogWarning($"Unable to apply vanilla options from current preset {currentPreset.Name}");
+            return;
+        }
+        GameOptionsManager.Instance.GameHostOptions = GameOptionsManager.Instance.gameOptionsFactory.FromBytes(Convert.FromBase64String(currentPreset.VanillaOptions));
+        GameOptionsManager.Instance.CurrentGameOptions = GameOptionsManager.Instance.GameHostOptions;
+        GameManager.Instance.LogicOptions.SetGameOptions(GameOptionsManager.Instance.CurrentGameOptions);
+        GameManager.Instance.LogicOptions.SyncOptions();
+    }
+
+    internal static void SaveVanillaOptions()
+    {
+        Current.GetCurrentPreset().VanillaOptions = Convert.ToBase64String(GameOptionsManager.Instance.gameOptionsFactory.ToBytes(GameManager.Instance.LogicOptions.currentGameOptions));
+        Persist();
     }
 
     internal static void ApplyCurrentPreset()
@@ -95,5 +127,7 @@ internal static class OptionStorage
                 option.SetCurrentSelection(selection, false);
             }
         }
+        
+        ApplyVanillaOptions();
     }
 }

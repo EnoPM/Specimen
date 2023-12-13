@@ -117,9 +117,16 @@ internal static class HatParentPatches
         }
 
         if (__instance.matProperties.MaskLayer > 0) return false;
-        PlayerMaterial.SetMaskLayerBasedOnLocalPlayer(__instance.FrontLayer, __instance.matProperties.IsLocalPlayer);
-        if (!__instance.BackLayer) return false;
-        PlayerMaterial.SetMaskLayerBasedOnLocalPlayer(__instance.BackLayer, __instance.matProperties.IsLocalPlayer);
+        if (__instance.FrontLayer)
+        {
+            PlayerMaterial.SetMaskLayerBasedOnLocalPlayer(__instance.FrontLayer,
+                __instance.matProperties.IsLocalPlayer);
+        }
+
+        if (__instance.BackLayer)
+        {
+            PlayerMaterial.SetMaskLayerBasedOnLocalPlayer(__instance.BackLayer, __instance.matProperties.IsLocalPlayer);
+        }
 
         return false;
     }

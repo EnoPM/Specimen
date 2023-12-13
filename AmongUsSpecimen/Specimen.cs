@@ -65,14 +65,12 @@ public class Specimen : BasePlugin
         Log.LogInfo($"Plugin {Name} is loaded!");
     }
 
-    private void UiManagerOnInitialized()
+    private static void UiManagerOnInitialized()
     {
         NotificationManager.Start();
         ModManager.Instance.ShowModStamp();
         VersionHandshakeManager.Start();
-#if DEBUG
-        NotificationManager.DemoNotification();
-#endif
+        ModOptionManager.PresetManagerWindow = UiManager.RegisterWindow<PresetManagerWindow>();
     }
 
     private void PluginLoad(PluginInfo pluginInfo, Assembly assembly, BasePlugin plugin)

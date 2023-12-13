@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace AmongUsSpecimen.ModOptions;
 
@@ -131,6 +132,11 @@ public static class ModOptionUtility
         }
         return customOption != null;
     }
+    
+    internal static bool IsCustomOption(OptionBehaviour optionBehaviour)
+    {
+        return TryGetOption(optionBehaviour, out _);
+    }
 
     internal static bool CustomOptionEnable(StringOption stringOption)
     {
@@ -162,9 +168,6 @@ public static class ModOptionUtility
         option.CurrentSelection -= 1;
         return false;
     }
-    
-    private static float _timer = 1f;
-    private const float BaseOptionsPerRow = 8f;
 
     internal static void CustomOptionMenuUpdate(GameOptionsMenu optionsMenu)
     {
@@ -355,14 +358,13 @@ public static class ModOptionUtility
         }
         
         DestroyOptions(customMenus.Select(x => x.Value.GetComponentsInChildren<OptionBehaviour>()));
-
-        var customOptions = new Dictionary<string, List<OptionBehaviour>>();
+        
         var menus = new Dictionary<string, Transform>();
         var optionBehaviours = new Dictionary<string, List<OptionBehaviour>>();
 
         foreach (var tab in tabsToCreate)
         {
-            optionBehaviours[tab.Key] = customOptions[tab.Key] = [];
+            optionBehaviours[tab.Key] = [];
             menus[tab.Key] = customMenus[tab.Key].transform;
 
             var options = ModOptionUtility.Options.Where(x => x.Tab == tab);
