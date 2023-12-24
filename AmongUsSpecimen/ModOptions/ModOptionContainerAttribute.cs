@@ -3,9 +3,13 @@
 namespace AmongUsSpecimen.ModOptions;
 
 [AttributeUsage(AttributeTargets.Class)]
-public class ModOptionContainerAttribute(ContainerType containerType = ContainerType.Options) : Attribute
+public class ModOptionContainerAttribute : Attribute
 {
-    internal readonly ContainerType ContainerType = containerType;
+    internal readonly ContainerType ContainerType;
+    public ModOptionContainerAttribute(ContainerType containerType = ContainerType.Options)
+    {
+        ContainerType = containerType;
+    }
 }
 
 public enum ContainerType
