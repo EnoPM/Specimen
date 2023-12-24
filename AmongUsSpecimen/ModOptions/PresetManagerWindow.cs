@@ -6,9 +6,11 @@ using System.Text.Json;
 using AmongUsSpecimen.UI;
 using AmongUsSpecimen.UI.Components;
 using AmongUsSpecimen.UI.Extensions;
+using AmongUsSpecimen.Utils;
 using BepInEx.Unity.IL2CPP.Utils;
 using UnityEngine;
 using UnityEngine.UI;
+using UniverseLib;
 using UniverseLib.UI;
 using UniverseLib.UI.Models;
 using ButtonRef = AmongUsSpecimen.UI.Components.ButtonRef;
@@ -33,6 +35,8 @@ public class PresetManagerWindow : UiWindow
     private ButtonRef _pasteButton;
     private InputFieldRef _createInput;
     private ButtonRef _createButton;
+    private readonly List<GameObject> _presetItems = [];
+    private GameObject _presetsContainer;
     
     protected override void ConstructWindowContent()
     {
@@ -53,20 +57,55 @@ public class PresetManagerWindow : UiWindow
         _pasteButton.OnClick += OnPasteButtonClick;
         UiFactory.SetLayoutElement(_pasteButton.GameObject, 170, 35, 0, 0, 0, 0);
 
-        var creationContainer = UiFactory.CreateVerticalGroup(ContentRoot, "CreatePreset", false, false, true, true, 5, childAlignment: TextAnchor.MiddleCenter, bgColor: UIPalette.LightDanger, padding: new Vector4(15f, 0f, 0f, 0f));
+        var creationContainer = UiFactory.CreateVerticalGroup(ContentRoot, "CreatePreset", false, false, true, true, 5, childAlignment: TextAnchor.UpperCenter, bgColor: UIPalette.LightDanger, padding: new Vector4(15f, 0f, 0f, 0f));
         creationContainer.GetComponent<Image>().enabled = false;
-        UiFactory.SetLayoutElement(creationContainer, MinWidth, 80, 0, 0, 0, 0);
+        UiFactory.SetLayoutElement(creationContainer, MinWidth, 90, 0, 0, 0, 0);
         _createInput = UiFactory.CreateInputField(creationContainer, "PresetName", "Preset name");
         UiFactory.SetLayoutElement(_createInput.GameObject, MinWidth - 20, 30, 0, 0, 0, 0);
+        _createInput.OnValueChanged += OnCreateInputValueChanged;
         _createButton = UiFactory.CreateButton(creationContainer, "CreateButton", "Create preset");
         _createButton.Component.SetColorsAuto(UIPalette.Success);
         _createButton.ButtonText.fontSize = 16;
         _createButton.ButtonText.fontStyle = FontStyle.Bold;
         _createButton.OnClick += OnCreateButtonClick;
+        _createButton.Enabled = true;
         UiFactory.SetLayoutElement(_createButton.GameObject, MinWidth - 20, 30, 0, 0, 0, 0);
+
+        var presetList = UiFactory.CreateScrollView(ContentRoot, "PresetList", out _presetsContainer, out _, minHeight: 200, minWidth: MinWidth, color: UIPalette.Dark, contentAlignment: TextAnchor.UpperCenter);
+        UiFactory.SetLayoutElement(presetList, MinWidth, 200, 0, 0, 0, 0);
+        foreach (var preset in OptionStorage.Current.Presets)
+        {
+            CreatePresetItem(preset);
+        }
+    }
+
+    private void CreatePresetItem(ModOptionPreset preset)
+    {
+        var presetContainer = UiFactory.CreateHorizontalGroup(_presetsContainer, "PresetItem", false, false, true, true, childAlignment: TextAnchor.MiddleCenter, bgColor: UIPalette.Primary);
+        UiFactory.SetLayoutElement(presetContainer, MinWidth - 50, 40, 0, 0, 0, 0);
+        var label = UiFactory.CreateLabel(presetContainer, "PresetLabel", preset.Name, TextAnchor.MiddleLeft, UIPalette.Secondary, true, 18);
+        UiFactory.SetLayoutElement(label.gameObject, MinWidth - 95, 40, 0, 0, 0, 0);
+        var buttonContainer = UiFactory.CreateVerticalGroup(presetContainer, "PresetDeleteButton", false, false, true, true, bgColor: Palette.EnabledColor);
+        UiFactory.SetLayoutElement(buttonContainer, 40, 40, 0, 0, 0, 0);
+        buttonContainer.GetComponent<Image>().sprite = SpecimenSprites.ErrorIcon;
+        var btn = buttonContainer.AddComponent<Button>();
+        btn.onClick.AddListener(() =>
+        {
+            UnityEngine.Object.Destroy(presetContainer);
+            OptionStorage.Current.Presets.Remove(preset);
+            _presetItems.Remove(presetContainer);
+        });
+        _presetItems.Add(presetContainer);
     }
     
     internal const string SerializedPrefix = "%%SPECIMEN_SERIALIZED_PRESET%%";
+
+    private void OnCreateInputValueChanged(string value)
+    {
+        var isEnabled = value.Trim() != string.Empty && !string.Equals(value, OptionStorage.Current.OnlinePreset.Name, StringComparison.InvariantCultureIgnoreCase) &&
+                        !OptionStorage.Current.Presets.Any(x => string.Equals(x.Name, value, StringComparison.InvariantCultureIgnoreCase));
+        _createButton.Component.SetColorsAuto(isEnabled ? UIPalette.Success : UIPalette.Danger);
+    }
 
     private void OnCopyButtonClick()
     {
@@ -84,7 +123,7 @@ public class PresetManagerWindow : UiWindow
         if (value.Trim() == string.Empty) return;
         if (value == OptionStorage.Current.OnlinePreset.Name || OptionStorage.Current.Presets.Any(x => x.Name == value))
         {
-            DisplayError($"A preset with the name {value} already exists.");
+            DisplayError($"A preset with the name \"{value}\" already exists.");
             return;
         }
 
@@ -96,6 +135,7 @@ public class PresetManagerWindow : UiWindow
             Values = new Dictionary<int, int>()
         };
         OptionStorage.SavePreset(preset);
+        CreatePresetItem(preset);
     }
 
     private static void DisplayError(string message)
@@ -103,7 +143,7 @@ public class PresetManagerWindow : UiWindow
         NotificationManager.AddNotification(new BasicNotification(new BasicNotificationConfig
         {
             Type = NotificationTypes.Danger,
-            Title = "Create preset error",
+            Title = ColorHelpers.Colorize(Color.red, "Preset error"),
             Description = message
         }, DateTime.UtcNow.Add(TimeSpan.FromSeconds(10))));
     }

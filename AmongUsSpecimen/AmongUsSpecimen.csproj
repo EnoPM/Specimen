@@ -52,19 +52,7 @@
       </Compile>
     </ItemGroup>
 
-    <Target Name="CopyPlugins" AfterTargets="AfterBuild">
-        <Copy SourceFiles="$(TargetPath)" DestinationFolder="C:\Program Files (x86)\Steam\steamapps\common\Among Us - Specimen\BepInEx\plugins" />
-    </Target>
-    <Target Name="CopyPluginsToBetterOtherRolesLibs" AfterTargets="AfterBuild">
-        <Copy SourceFiles="$(TargetPath)" DestinationFolder="C:\Users\Utilisateur\RiderProjects\BetterOtherRoles-v2\BetterOtherRoles\libs" />
-    </Target>
-    <Target Name="CopyPluginsToBetterOtherRolesGameFolder" AfterTargets="AfterBuild">
-        <Copy SourceFiles="$(TargetPath)" DestinationFolder="C:\Program Files (x86)\Steam\steamapps\common\Among Us - BetterOtherRoles2\BepInEx\plugins" />
-    </Target>
-    <Target Name="CopyPluginsToTheOtherRolesProject" AfterTargets="AfterBuild">
-        <Copy SourceFiles="$(TargetPath)" DestinationFolder="C:\Users\Utilisateur\RiderProjects\TOR-Devel\TheOtherRoles\libs" />
-    </Target>
-    <Target Name="CopyPluginsToTheOtherRolesGameFolder" AfterTargets="AfterBuild">
-        <Copy SourceFiles="$(TargetPath)" DestinationFolder="C:\Program Files (x86)\Steam\steamapps\common\Among Us - TheOtherRoles\BepInEx\plugins" />
+    <Target Name="CopyPluginToGameDirectory" AfterTargets="AfterBuild" Condition="Exists('$(AmongUsDev)/BepInEx/plugins/')">
+        <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(AmongUsDev)/BepInEx/plugins/" />
     </Target>
 </Project>

@@ -85,7 +85,6 @@ public abstract class BaseModOption
 
     internal void BehaviourUpdate()
     {
-        var toReturn = 0f;
         if (!OptionBehaviour) return;
         if (Type == OptionType.Boolean)
         {
@@ -177,14 +176,10 @@ public abstract class BaseModOption
         {
             case OptionSaveLocation.Global:
                 return OptionStorage.Current.Global.GetValueOrDefault(Id, DefaultSelection);
-                break;
             case OptionSaveLocation.Local:
                 return OptionStorage.Current.Local.GetValueOrDefault(Id, DefaultSelection);
-                break;
             case OptionSaveLocation.Preset:
                 return OptionStorage.Current.GetCurrentPreset().Values.GetValueOrDefault(Id, DefaultSelection);
-            default:
-                break;
         }
 
         return DefaultSelection;

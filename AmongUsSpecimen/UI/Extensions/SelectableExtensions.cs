@@ -8,7 +8,7 @@ public static class SelectableExtensions
 {
     public static void SetColorsAuto(this Selectable selectable, Color color)
     {
-        selectable.SetColors(normal: color, hover: color * 1.2f, pressed: color * 0.8f, focused: color, disabled: UIPalette.Danger);
+        selectable.SetColors(normal: color, hover: color * 1.2f, pressed: color * 0.8f, focused: color, disabled: UIPalette.Secondary);
     }
     
     public static void SetColors(this Selectable selectable, Color? normal = null, Color? hover = null, Color? pressed = null, Color? disabled = null, Color? focused = null)
