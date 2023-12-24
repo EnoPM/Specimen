@@ -25,7 +25,7 @@ public class OptionsHudWindow : UiWindow
     protected override Color BackgroundColor => UIPalette.Transparent;
     protected override Positions Position => Positions.TopLeft;
     
-    internal readonly List<UiOptionTab> OptionTabs = [];
+    internal readonly List<UiOptionTab> OptionTabs = new();
     private int _currentTabIndex = 0;
     internal UiOptionTab CurrentTab => OptionTabs[_currentTabIndex];
     

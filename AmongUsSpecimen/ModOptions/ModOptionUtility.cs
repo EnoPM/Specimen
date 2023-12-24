@@ -364,7 +364,7 @@ public static class ModOptionUtility
 
         foreach (var tab in tabsToCreate)
         {
-            optionBehaviours[tab.Key] = [];
+            optionBehaviours[tab.Key] = new();
             menus[tab.Key] = customMenus[tab.Key].transform;
 
             var options = ModOptionUtility.Options.Where(x => x.Tab == tab);

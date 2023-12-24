@@ -22,7 +22,7 @@ public class PlayersHudWindow : UiWindow
     protected override Color BackgroundColor => UIPalette.Transparent;
     protected override Positions Position => Positions.TopLeft;
 
-    internal readonly List<PlayerVersionCheck> VersionChecks = [];
+    internal readonly List<PlayerVersionCheck> VersionChecks = new();
     
     protected override void ConstructWindowContent()
     {

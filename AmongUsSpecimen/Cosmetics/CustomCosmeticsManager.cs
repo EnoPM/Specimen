@@ -17,10 +17,10 @@ internal static class CustomCosmeticsManager
     private static string CustomSkinsDirectory => Path.Combine(Specimen.ResourcesDirectory, "Cosmetics");
     internal static string HatsDirectory => Path.Combine(CustomSkinsDirectory, "Hats");
     
-    internal static readonly List<CustomHat> UnregisteredHats = [];
+    internal static readonly List<CustomHat> UnregisteredHats = new();
     internal static readonly Dictionary<string, CustomHat> RegisteredHats = new();
     internal static readonly Dictionary<string, HatViewData> HatViewDataCache = new();
-    private static readonly List<HatParent> HatParentCache = [];
+    private static readonly List<HatParent> HatParentCache = new();
     internal static readonly Dictionary<string, HatExtension> HatExtensionCache = new();
     private static readonly Dictionary<string, List<string>> HatFiles = new();
     

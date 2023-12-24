@@ -11,7 +11,7 @@ internal class UiCustomOptionTab : UiOptionTab
 {
     internal readonly ModOptionTab Tab;
     private readonly GameObject _optionsContainer;
-    private readonly List<UiCustomOption> _options = [];
+    private readonly List<UiCustomOption> _options = new();
 
     internal UiCustomOptionTab(GameObject parent, int width, int height, ModOptionTab tab) : base(parent, width,
         height)

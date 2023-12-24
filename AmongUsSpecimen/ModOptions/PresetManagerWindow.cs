@@ -35,7 +35,7 @@ public class PresetManagerWindow : UiWindow
     private ButtonRef _pasteButton;
     private InputFieldRef _createInput;
     private ButtonRef _createButton;
-    private readonly List<GameObject> _presetItems = [];
+    private readonly List<GameObject> _presetItems = new();
     private GameObject _presetsContainer;
     
     protected override void ConstructWindowContent()

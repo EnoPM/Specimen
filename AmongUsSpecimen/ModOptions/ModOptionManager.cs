@@ -6,8 +6,8 @@ namespace AmongUsSpecimen.ModOptions;
 
 internal static class ModOptionManager
 {
-    internal static readonly List<ModOptionTab> Tabs = [];
-    internal static readonly List<BaseModOption> Options = [];
+    internal static readonly List<ModOptionTab> Tabs = new();
+    internal static readonly List<BaseModOption> Options = new();
     internal static PresetManagerWindow PresetManagerWindow { get; set; }
 
     internal static void RegisterAssembly(Assembly assembly)
