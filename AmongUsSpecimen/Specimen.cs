@@ -28,7 +28,7 @@ public class Specimen : BasePlugin
 {
     public const string Guid = "specimen.eno.pm";
     private const string Name = "AmongUsSpecimen";
-    private const string Version = "0.1.0";
+    private const string Version = "0.1.1";
 
     internal const string ToggleSpecimenDashboardActionName = "ActionToggleSpecimenDashboard";
 

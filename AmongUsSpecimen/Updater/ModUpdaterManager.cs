@@ -24,9 +24,7 @@ public static class ModUpdaterManager
     
     public static bool DefaultCompatibilityCheck(ModUpdaterConfig updaterConfig, GithubRelease release)
     {
-        var isVersionCompatible = release.Version.Major == updaterConfig.VersionToCompare.Major &&
-                                  release.Version.Minor == updaterConfig.VersionToCompare.Minor;
-        return isVersionCompatible || !release.Description.Contains(Application.version);
+        return !release.Description.Contains(Application.version);
     }
 
     internal static void RegisterAssembly(Assembly assembly)
