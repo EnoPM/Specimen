@@ -6,8 +6,9 @@ using UnityEngine;
 namespace AmongUsSpecimen.UI.LobbyHud;
 
 [RegisterMonoBehaviour]
-internal class PlayersHudMenuBehaviour(IntPtr ptr) : MonoBehaviour(ptr)
+internal class PlayersHudMenuBehaviour : MonoBehaviour
 {
+    public PlayersHudMenuBehaviour(IntPtr ptr) : base(ptr) { }
     internal PlayersHudWindow Window { get; set; }
 
     internal void Start()

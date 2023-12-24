@@ -5,9 +5,10 @@ using UnityEngine;
 namespace AmongUsSpecimen.UI.LobbyHud;
 
 [RegisterMonoBehaviour]
-internal class OptionsHudMenuBehaviour(IntPtr ptr) : MonoBehaviour(ptr)
+internal class OptionsHudMenuBehaviour : MonoBehaviour
 {
-    
+    public OptionsHudMenuBehaviour(IntPtr ptr) : base(ptr) { }
+
     internal OptionsHudWindow Window { get; set; }
     private int _hostIdCache { get; set; }
 
