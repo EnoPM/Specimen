@@ -5,7 +5,7 @@
         <PackageId>AmongUs.Specimen</PackageId>
         <AssemblyName>AmongUsSpecimen</AssemblyName>
         <Description>Among Us BepinEx plugin updater</Description>
-        <Version>0.1.1</Version>
+        <Version>0.1.2</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>preview</LangVersion>
         <RestoreAdditionalProjectSources>

@@ -23,7 +23,7 @@ internal class LobbyHudWindow : UiWindow
 
     internal bool ShouldBeDisplayed { get; set; } = true;
     private GameObject _container;
-    private AmongUsCheckbox _hudToggle;
+    internal AmongUsCheckbox HudToggle;
 
     private MenuButton _optionsMenu;
     private MenuButton _playersMenu;
@@ -43,7 +43,7 @@ internal class LobbyHudWindow : UiWindow
             5, bgColor: Palette.EnabledColor, padding: new Vector4(3f, 0f, 0f, 0f));
         UiFactory.SetLayoutElement(_container, MinWidth, MinHeight, 0, 0, 0, 0);
         _container.GetComponent<Image>().sprite = SpecimenSprites.UiBackgroundBase;
-        _hudToggle = new AmongUsCheckbox(_container, 40, defaultValue: ShouldBeDisplayed, maxWidth: 235)
+        HudToggle = new AmongUsCheckbox(_container, 40, defaultValue: ShouldBeDisplayed, maxWidth: 235)
         {
             Label =
             {
@@ -53,10 +53,10 @@ internal class LobbyHudWindow : UiWindow
                 color = ShouldBeDisplayed ? Color.green : Color.red
             }
         };
-        var labelOutline = _hudToggle.Label.gameObject.AddComponent<Outline>();
+        var labelOutline = HudToggle.Label.gameObject.AddComponent<Outline>();
         labelOutline.effectDistance = new Vector2(1f, 1f);
         labelOutline.effectColor = Color.black;
-        _hudToggle.ValueChanged += OnHudToggleValueChanged;
+        HudToggle.ValueChanged += OnHudToggleValueChanged;
 
         _optionsMenu = CreateMenuButton("Options", OnOptionsButtonClick);
         _playersMenu = CreateMenuButton("Players", OnPlayersButtonClick);
@@ -82,7 +82,7 @@ internal class LobbyHudWindow : UiWindow
 
     private void RefreshState()
     {
-        _hudToggle.Label.color = ShouldBeDisplayed ? Color.green : Color.red;
+        HudToggle.Label.color = ShouldBeDisplayed ? Color.green : Color.red;
         _optionsMenu.GameObject.SetActive(ShouldBeDisplayed);
         _playersMenu.GameObject.SetActive(ShouldBeDisplayed);
         _container.GetComponent<Image>().enabled = ShouldBeDisplayed;
