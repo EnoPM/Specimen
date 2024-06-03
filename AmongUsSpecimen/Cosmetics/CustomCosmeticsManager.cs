@@ -117,7 +117,7 @@ internal static class CustomCosmeticsManager
 
         if (ch.Adaptive && cachedShader != null)
         {
-            viewData.AltShader = cachedShader;
+            viewData.MatchPlayerColor = cachedShader;
         }
         
         var extend = new HatExtension
@@ -307,7 +307,7 @@ internal static class CustomCosmeticsManager
         var parents = HatParentCache.Where(x => x && x.Hat.name == hatName);
         foreach (var parent in parents)
         {
-            parent.PopulateFromHatViewData();
+            parent.PopulateFromViewData();
         }
         
         var players = PlayerControl.AllPlayerControls.ToArray().Where(x =>
@@ -315,7 +315,7 @@ internal static class CustomCosmeticsManager
             x.cosmetics.hat.Hat.name == hatName);
         foreach (var player in players)
         {
-            player.cosmetics.hat.PopulateFromHatViewData();
+            player.cosmetics.hat.PopulateFromViewData();
         }
     }
 

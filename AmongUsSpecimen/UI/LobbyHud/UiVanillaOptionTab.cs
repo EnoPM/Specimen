@@ -58,7 +58,7 @@ internal class UiVanillaOptionTab : UiOptionTab
     private static string RenderMapNameValue()
     {
         if (!IsOptionsReady) return string.Empty;
-        var mapId = GameOptionsManager.Instance.CurrentGameOptions.MapId != 0 || !Constants.ShouldFlipSkeld()
+        var mapId = GameOptionsManager.Instance.CurrentGameOptions.MapId != 0 || !AprilFoolsMode.ShouldFlipSkeld()
             ? GameOptionsManager.Instance.CurrentGameOptions.MapId
             : 3;
         return Constants.MapNames[mapId];

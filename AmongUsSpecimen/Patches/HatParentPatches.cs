@@ -24,7 +24,7 @@ internal static class HatParentPatches
     private static bool SetHatPrefix(HatParent __instance, HatData hat, int color)
     {
         if (SetCustomHat(__instance)) return true;
-        __instance.PopulateFromHatViewData();
+        __instance.PopulateFromViewData();
         __instance.SetMaterialColor(color);
         return false;
     }
@@ -34,8 +34,7 @@ internal static class HatParentPatches
     private static bool SetHatPrefix(HatParent __instance, int color)
     {
         if (!__instance.IsCached()) return true;
-        __instance.hatDataAsset = null;
-        __instance.PopulateFromHatViewData();
+        __instance.PopulateFromViewData();
         __instance.SetMaterialColor(color);
         return false;
     }
@@ -45,12 +44,12 @@ internal static class HatParentPatches
     private static bool UpdateMaterialPrefix(HatParent __instance)
     {
         if (!__instance.TryGetCached(out var asset)) return true;
-        if (asset && asset.AltShader)
+        if (asset && asset.MatchPlayerColor)
         {
-            __instance.FrontLayer.sharedMaterial = asset.AltShader;
+            __instance.FrontLayer.sharedMaterial = (Material)asset.MatchPlayerColor;
             if (__instance.BackLayer)
             {
-                __instance.BackLayer.sharedMaterial = asset.AltShader;
+                __instance.BackLayer.sharedMaterial = (Material)asset.MatchPlayerColor;
             }
         }
         else
@@ -192,8 +191,7 @@ internal static class HatParentPatches
     {
         if (!__instance.Hat) return false;
         if (!__instance.IsCached()) return true;
-        __instance.hatDataAsset = null;
-        __instance.PopulateFromHatViewData();
+        __instance.PopulateFromViewData();
         __instance.SetMaterialColor(colorId);
         return false;
     }
@@ -210,7 +208,7 @@ internal static class HatParentPatches
         return false;
     }
 
-    [HarmonyPatch(nameof(HatParent.PopulateFromHatViewData))]
+    [HarmonyPatch(nameof(HatParent.PopulateFromViewData))]
     [HarmonyPrefix]
     private static bool PopulateFromHatViewDataPrefix(HatParent __instance)
     {

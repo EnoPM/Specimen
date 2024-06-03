@@ -5,8 +5,8 @@ Specimen is a BepinEx plugin for Among Us that will relieve you of a lot of the 
 - **Package Id:** `AmongUs.Specimen`
 
 ## Supported Versions:
-- **Among Us:** 2023.10.24 (current version)
-- **BepinEx:** 6.0.0-be671+
+- **Among Us:** 2024.3.5 (current version)
+- **BepinEx:** 6.0.0-be688+
 
 ## Installation
 - Download latest `AmongUs.Specimen.dll` file in [releases](https://github.com/EnoPM/Specimen/releases).
