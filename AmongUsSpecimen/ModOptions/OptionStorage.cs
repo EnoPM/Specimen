@@ -98,7 +98,7 @@ internal static class OptionStorage
 
     internal static void SaveVanillaOptions()
     {
-        Current.GetCurrentPreset().VanillaOptions = Convert.ToBase64String(GameOptionsManager.Instance.gameOptionsFactory.ToBytes(GameManager.Instance.LogicOptions.currentGameOptions));
+        Current.GetCurrentPreset().VanillaOptions = Convert.ToBase64String(GameOptionsManager.Instance.gameOptionsFactory.ToBytes(GameManager.Instance.LogicOptions.currentGameOptions, false));
         Persist();
     }
 
